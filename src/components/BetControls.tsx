@@ -18,7 +18,10 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
   // Format balance for display and calculations
   const getAvailableBalance = () => {
     if (wallet.connected && wallet.balance) {
-      return Number(wallet.balance) / 1e9;
+      // Convert string to number if needed
+      return typeof wallet.balance === 'string' 
+        ? parseFloat(wallet.balance) 
+        : wallet.balance;
     }
     return balance;
   };
