@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -64,6 +65,47 @@
 }
 
 @layer components {
+  /* Neomorphic styles */
+  .neomorphic-header {
+    background: linear-gradient(145deg, #1c2030, #17192b);
+    box-shadow: 8px 8px 16px #14161f, 
+                -8px -8px 16px #202839;
+  }
+  
+  .neomorphic-wallet {
+    background: rgba(29, 33, 49, 0.8);
+    box-shadow: inset 3px 3px 6px #14161f, 
+                inset -3px -3px 6px #202839;
+  }
+  
+  .neomorphic-balance {
+    background: rgba(29, 33, 49, 0.8);
+    box-shadow: inset 3px 3px 6px #14161f, 
+                inset -3px -3px 6px #202839;
+  }
+  
+  .neomorphic-button {
+    background: linear-gradient(145deg, #1c2030, #17192b);
+    box-shadow: 3px 3px 6px #14161f, 
+                -3px -3px 6px #202839;
+    transition: all 0.3s ease;
+  }
+  
+  .neomorphic-button:hover {
+    box-shadow: 5px 5px 10px #14161f, 
+                -5px -5px 10px #202839;
+  }
+  
+  .neo-dice {
+    background: linear-gradient(145deg, #1c2030, #17192b);
+    box-shadow: 8px 8px 16px #14161f, 
+                -8px -8px 16px #202839,
+                inset 2px 2px 4px #202839,
+                inset -2px -2px 4px #14161f;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+  
   .game-card {
     @apply glass-card p-4 transition-all duration-300 hover:shadow-neon hover:scale-105 cursor-pointer;
   }
@@ -193,12 +235,7 @@
   }
   
   .dice {
-    @apply relative bg-white rounded-lg shadow-xl transition-all duration-500 transform-style-3d;
-    background: linear-gradient(225deg, #ffffff, #e6e6e6);
-    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2),
-                -5px -5px 15px rgba(255, 255, 255, 0.1),
-                inset -5px -5px 5px rgba(255, 255, 255, 0.8),
-                inset 5px 5px 10px rgba(0, 0, 0, 0.05);
+    @apply relative rounded-lg shadow-xl transition-all duration-500 transform-style-3d;
   }
   
   .dice-dot {

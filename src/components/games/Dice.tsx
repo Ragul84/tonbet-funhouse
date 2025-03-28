@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useGameContext } from "@/context/GameContext";
 import BetControls from "@/components/BetControls";
 import { Button } from "@/components/ui/button";
-import { Coins } from "lucide-react";
+import { Coins, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from "lucide-react";
 
 const Dice: React.FC = () => {
   const { placeBet, isLoading, trialPlaysLeft } = useGameContext();
@@ -38,32 +38,21 @@ const Dice: React.FC = () => {
     }, 2000);
   };
 
-  // Render dots based on dice value
-  const renderDots = (value: number | null) => {
-    if (value === null) return null;
-    
-    const dots = [];
-    
-    if (value === 1 || value === 3 || value === 5) {
-      dots.push(<div key="center" className="dice-dot absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>);
+  // Render dice face based on value
+  const renderDiceFace = (value: number | null) => {
+    if (value === null) {
+      return <Dice1 className="w-12 h-12 text-app-purple/90" />;
     }
     
-    if (value >= 2) {
-      dots.push(<div key="top-left" className="dice-dot absolute top-1/4 left-1/4"></div>);
-      dots.push(<div key="bottom-right" className="dice-dot absolute bottom-1/4 right-1/4"></div>);
+    switch(value) {
+      case 1: return <Dice1 className="w-12 h-12 text-app-purple" />;
+      case 2: return <Dice2 className="w-12 h-12 text-app-purple" />;
+      case 3: return <Dice3 className="w-12 h-12 text-app-purple" />;
+      case 4: return <Dice4 className="w-12 h-12 text-app-purple" />;
+      case 5: return <Dice5 className="w-12 h-12 text-app-purple" />;
+      case 6: return <Dice6 className="w-12 h-12 text-app-purple" />;
+      default: return <Dice1 className="w-12 h-12 text-app-purple/90" />;
     }
-    
-    if (value >= 4) {
-      dots.push(<div key="top-right" className="dice-dot absolute top-1/4 right-1/4"></div>);
-      dots.push(<div key="bottom-left" className="dice-dot absolute bottom-1/4 left-1/4"></div>);
-    }
-    
-    if (value === 6) {
-      dots.push(<div key="middle-left" className="dice-dot absolute top-1/2 left-1/4 transform -translate-y-1/2"></div>);
-      dots.push(<div key="middle-right" className="dice-dot absolute top-1/2 right-1/4 transform -translate-y-1/2"></div>);
-    }
-    
-    return dots;
   };
 
   return (
@@ -75,8 +64,8 @@ const Dice: React.FC = () => {
 
       <div className="flex justify-center py-8">
         <div ref={diceContainerRef} className="dice-container">
-          <div className="dice w-full h-full flex items-center justify-center">
-            {renderDots(result)}
+          <div className="dice neo-dice w-full h-full flex items-center justify-center">
+            {renderDiceFace(result)}
           </div>
         </div>
       </div>
