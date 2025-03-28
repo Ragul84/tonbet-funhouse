@@ -20,8 +20,8 @@ import NotFound from "./pages/NotFound";
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
 
-// TON Connect manifest URL (you should host this file on your server)
-const manifestUrl = 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json';
+// TON Connect manifest URL - using a valid public URL
+const manifestUrl = 'https://ton-connect.github.io/demo-dapp-with-wallet/tonconnect-manifest.json';
 
 const App = () => (
   <React.StrictMode>

@@ -77,7 +77,15 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return;
       }
       
+      // Ensure we're using the correct TON Connect UI instance
+      if (!tonConnectUI) {
+        console.error("TonConnectUI is not initialized");
+        toast.error("Wallet connection failed. Please try again later.");
+        return;
+      }
+      
       await tonConnectUI.connectWallet();
+      console.info("Wallet connection initiated");
       toast.success("Wallet connected successfully!");
     } catch (error) {
       console.error("Error connecting wallet:", error);
@@ -99,6 +107,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         address: null,
         balance: null
       });
+      console.info("Wallet disconnected");
       toast.success("Wallet disconnected successfully!");
     } catch (error) {
       console.error("Error disconnecting wallet:", error);
@@ -108,10 +117,18 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Monitor wallet connection status
   useEffect(() => {
-    if (!tonConnectUI) return;
+    if (!tonConnectUI) {
+      console.error("TonConnectUI is not available in the effect");
+      return;
+    }
+    
+    console.info("Setting up wallet connection listener");
     
     const unsubscribe = tonConnectUI.onStatusChange((walletInfo) => {
+      console.info("Wallet status changed:", walletInfo ? "connected" : "disconnected");
+      
       if (walletInfo) {
+        console.info("Wallet connected:", walletInfo.account.address);
         setWallet({
           connected: true,
           address: walletInfo.account.address,
@@ -123,6 +140,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const simulateBalanceFetch = async () => {
           // Simulate balance fetch with a more reasonable amount (1-10 TON)
           const mockBalance = (1 + Math.random() * 9) * 1e9; // Random TON amount between 1-10 TON
+          console.info("Setting mock wallet balance:", mockBalance.toString());
           setWallet(prev => ({
             ...prev,
             balance: mockBalance.toString()
@@ -131,6 +149,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         
         simulateBalanceFetch();
       } else {
+        console.info("Wallet disconnected");
         setWallet({
           connected: false,
           address: null,
@@ -139,7 +158,28 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     });
     
+    // Check if wallet is already connected
+    if (tonConnectUI.connected) {
+      console.info("Wallet already connected, fetching info");
+      const walletInfo = tonConnectUI.wallet;
+      if (walletInfo) {
+        setWallet({
+          connected: true,
+          address: walletInfo.account.address,
+          balance: "Loading..."
+        });
+        
+        // Simulate balance fetch
+        const mockBalance = (1 + Math.random() * 9) * 1e9;
+        setWallet(prev => ({
+          ...prev,
+          balance: mockBalance.toString()
+        }));
+      }
+    }
+    
     return () => {
+      console.info("Cleaning up wallet connection listener");
       unsubscribe();
     };
   }, [tonConnectUI]);
