@@ -21,10 +21,10 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <GameProvider>
       <TelegramProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+        <BrowserRouter>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/coinflip" element={<CoinflipPage />} />
@@ -34,8 +34,8 @@ const App = () => (
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </BrowserRouter>
       </TelegramProvider>
     </GameProvider>
   </QueryClientProvider>
