@@ -91,14 +91,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex flex-col items-center p-2 ${
+                className={`flex flex-col items-center p-2 transition-all duration-300 ${
                   location.pathname === item.path 
                     ? "text-app-purple font-medium" 
                     : "text-gray-400 hover:text-white"
                 }`}
               >
-                <Icon className="h-5 w-5" />
-                {!isMobile && <span className="text-sm">{item.name}</span>}
+                <div className={`p-2 rounded-full ${location.pathname === item.path ? 'bg-app-purple/20' : 'hover:bg-white/5'}`}>
+                  <Icon className={`h-5 w-5 ${location.pathname === item.path ? 'text-app-purple' : ''}`} />
+                </div>
+                {!isMobile && <span className="text-sm mt-1">{item.name}</span>}
               </Link>
             );
           })}
