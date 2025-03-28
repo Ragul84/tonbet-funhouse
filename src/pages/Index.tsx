@@ -116,7 +116,7 @@ const Index: React.FC = () => {
         <RevenueInfo />
         
         {/* Recent Bets */}
-        <BetHistory limit={5} showViewAll={true} />
+        <BetHistory gameType="all" />
       </div>
     </Layout>
   );
