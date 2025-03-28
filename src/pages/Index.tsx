@@ -3,7 +3,9 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import BetHistory from "@/components/BetHistory";
-import { CircleDollarSign } from "lucide-react";
+import { CircleDollarSign, Trophy } from "lucide-react";
+import { useGameContext } from "@/context/GameContext";
+import { useTelegramContext } from "@/context/TelegramContext";
 
 const games = [
   {
@@ -30,6 +32,9 @@ const games = [
 ];
 
 const Index = () => {
+  const { currentUserStats } = useGameContext();
+  const { user } = useTelegramContext();
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -38,7 +43,30 @@ const Index = () => {
           <p className="text-gray-400 max-w-md mx-auto">
             Play exciting games, bet TON, and win up to 1.8x your bet!
           </p>
+          {user && (
+            <p className="text-sm text-gray-400">
+              Welcome, @{user.username}!
+            </p>
+          )}
         </div>
+
+        {currentUserStats && (
+          <div className="glass-card p-4 max-w-md mx-auto">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-medium">Your Stats</h3>
+                <p className="text-sm text-gray-400">Total bets: {currentUserStats.totalBets}</p>
+                <p className="text-sm text-gray-400">Wins: {currentUserStats.totalWins}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-gray-400">Net profit:</p>
+                <p className={`font-bold ${currentUserStats.netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {currentUserStats.netProfit.toFixed(2)} TON
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="glass-card p-6 text-center bg-gradient-radial">
           <div className="inline-block bg-black/40 p-3 rounded-full mb-4">
@@ -64,6 +92,20 @@ const Index = () => {
             </Link>
           ))}
         </div>
+
+        <Link 
+          to="/leaderboard" 
+          className="game-card relative overflow-hidden group flex items-center justify-between"
+        >
+          <div>
+            <h3 className="text-xl font-bold mb-2 flex items-center">
+              <Trophy className="mr-2 h-5 w-5 text-yellow-500" />
+              Leaderboard
+            </h3>
+            <p className="text-gray-400">See who's winning the most</p>
+          </div>
+          <div className="text-app-purple">View →</div>
+        </Link>
 
         <BetHistory />
       </div>

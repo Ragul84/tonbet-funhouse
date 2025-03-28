@@ -1,11 +1,13 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { CircleDollarSign } from "lucide-react";
+import { CircleDollarSign, Trophy } from "lucide-react";
 import { useGameContext } from "@/context/GameContext";
+import { useTelegramContext } from "@/context/TelegramContext";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { balance } = useGameContext();
+  const { user } = useTelegramContext();
   const location = useLocation();
 
   const navigation = [
@@ -13,6 +15,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { name: "Coinflip", path: "/coinflip" },
     { name: "Dice", path: "/dice" },
     { name: "Crash", path: "/crash" },
+    { name: "Leaderboard", path: "/leaderboard" },
   ];
 
   return (
@@ -22,9 +25,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           TON Bet
         </Link>
         
-        <div className="flex items-center space-x-2 bg-black/20 px-4 py-2 rounded-full">
-          <CircleDollarSign className="h-5 w-5 text-ton" />
-          <span className="font-medium">{balance.toFixed(2)} TON</span>
+        <div className="flex items-center space-x-4">
+          {user && (
+            <div className="text-sm text-gray-300">
+              @{user.username}
+            </div>
+          )}
+          <div className="flex items-center space-x-2 bg-black/20 px-4 py-2 rounded-full">
+            <CircleDollarSign className="h-5 w-5 text-ton" />
+            <span className="font-medium">{balance.toFixed(2)} TON</span>
+          </div>
         </div>
       </header>
 
@@ -44,6 +54,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   : "text-gray-400 hover:text-white"
               }`}
             >
+              {item.name === "Leaderboard" ? (
+                <Trophy className="h-5 w-5" />
+              ) : null}
               <span className="text-sm">{item.name}</span>
             </Link>
           ))}
