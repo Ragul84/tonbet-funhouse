@@ -20,7 +20,7 @@ import NotFound from "./pages/NotFound";
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
 
-// TON Connect manifest URL
+// TON Connect manifest URL (you should host this file on your server)
 const manifestUrl = 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json';
 
 const App = () => (
@@ -31,7 +31,7 @@ const App = () => (
           <TelegramProvider>
             <GameProvider>
               <Toaster />
-              <Sonner position="top-right" closeButton={true} />
+              <Sonner />
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Index />} />

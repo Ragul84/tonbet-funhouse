@@ -20,7 +20,6 @@ declare global {
         ready: () => void;
       };
     };
-    TON?: any;
   }
 }
 
@@ -67,17 +66,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
   
   // Initialize TON Connect
-  const [tonConnectUI, setOptions] = useTonConnectUI();
-
-  // Make sure we're correctly configuring the TonConnectUI
-  useEffect(() => {
-    setOptions({
-      manifestUrl: 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json',
-      uiPreferences: {
-        theme: 'dark'
-      }
-    });
-  }, [setOptions]);
+  const [tonConnectUI] = useTonConnectUI();
 
   // Connect to TON wallet
   const connectWallet = async () => {
@@ -87,7 +76,6 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return;
       }
       
-      console.log("Attempting to connect wallet...");
       await tonConnectUI.connectWallet();
       toast.success("Wallet connected successfully!");
     } catch (error) {
@@ -123,7 +111,6 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     const unsubscribe = tonConnectUI.onStatusChange((walletInfo) => {
       if (walletInfo) {
-        console.log("Wallet connected:", walletInfo);
         setWallet({
           connected: true,
           address: walletInfo.account.address,
