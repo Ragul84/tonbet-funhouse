@@ -28,6 +28,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     if (!address) return "";
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
+  
+  // Format TON balance for display (converting from nanoTON to TON)
+  const formatBalance = (balanceInNano: string | null) => {
+    if (!balanceInNano) return "0.00";
+    // Convert from nanoTON to TON (1 TON = 10^9 nanoTON)
+    const balanceInTON = Number(balanceInNano) / 1e9;
+    return balanceInTON.toFixed(2);
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -74,7 +82,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           
           <div className="flex items-center space-x-2 neomorphic-balance px-3 py-2 rounded-full">
             <CircleDollarSign className="h-5 w-5 text-ton" />
-            <span className="font-medium text-white">{wallet.connected ? (Number(wallet.balance)/1e9).toFixed(2) : balance.toFixed(2)} TON</span>
+            <span className="font-medium text-white">
+              {wallet.connected ? formatBalance(wallet.balance) : balance.toFixed(2)} TON
+            </span>
           </div>
         </div>
       </header>

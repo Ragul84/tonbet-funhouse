@@ -95,19 +95,29 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [tonConnectUI] = useTonConnectUI();
 
   useEffect(() => {
-    const walletChangeHandler = () => {
+    const walletChangeHandler = async () => {
       const walletConnection = tonConnectUI.account;
       
       if (walletConnection) {
-        // Fix: Get the balance as a string from the account
-        // The tonConnectUI doesn't provide balance directly in the account object
-        // We need to format it as a string
-        setWallet({
-          connected: true,
-          address: walletConnection.address,
-          balance: walletConnection.balance?.toString() || "0"
-        });
-        toast.success("Wallet connected successfully!");
+        try {
+          // Get wallet balance from tonConnectUI
+          const walletBalance = await tonConnectUI.getWalletBalance();
+          
+          setWallet({
+            connected: true,
+            address: walletConnection.address,
+            balance: walletBalance ? walletBalance.toString() : "0"
+          });
+          
+          toast.success("Wallet connected successfully!");
+        } catch (error) {
+          console.error("Error getting wallet balance:", error);
+          setWallet({
+            connected: true,
+            address: walletConnection.address,
+            balance: "0"
+          });
+        }
       } else {
         setWallet({
           connected: false,
@@ -119,7 +129,9 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     walletChangeHandler();
     
-    const unsubscribe = tonConnectUI.onStatusChange(walletChangeHandler);
+    const unsubscribe = tonConnectUI.onStatusChange(() => {
+      walletChangeHandler();
+    });
     
     return () => {
       unsubscribe();
