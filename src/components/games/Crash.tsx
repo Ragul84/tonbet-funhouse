@@ -4,7 +4,7 @@ import { useGameContext } from "@/context/GameContext";
 import BetControls from "@/components/BetControls";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Coins, TimerIcon, ArrowUp } from "lucide-react";
+import { Coins, TimerIcon, ArrowUp, TrendingUp, TrendingDown } from "lucide-react";
 
 const Crash: React.FC = () => {
   const { placeBet, isLoading, trialPlaysLeft, setCurrentGame } = useGameContext();
@@ -18,6 +18,7 @@ const Crash: React.FC = () => {
   const crashPoint = useRef(2);
   const startTime = useRef<number>(0);
   const graphRef = useRef<HTMLDivElement>(null);
+  const curvePointsRef = useRef<{x: number, y: number}[]>([]);
   
   // Set current game on mount
   useEffect(() => {
@@ -38,6 +39,7 @@ const Crash: React.FC = () => {
     setIsCrashing(false);
     setIsRunning(true);
     setCanCashOut(true);
+    curvePointsRef.current = [];
     
     // Generate a crash point between 1 and 10
     crashPoint.current = 1 + Math.random() * 9;
@@ -50,13 +52,13 @@ const Crash: React.FC = () => {
   // Update the multiplier based on time
   const updateMultiplier = () => {
     const elapsedTime = (Date.now() - startTime.current) / 1000; // in seconds
-    const newMultiplier = Math.pow(Math.E, 0.05 * elapsedTime);
+    // Use a smoother growth function for more natural curve
+    const newMultiplier = Math.pow(Math.E, 0.06 * elapsedTime);
     setCurrentMultiplier(newMultiplier);
     
     // Update the animation graph
     if (graphRef.current) {
-      const pathPoints = generateCrashCurve(newMultiplier);
-      updateCrashPath(pathPoints);
+      updateCrashPath(newMultiplier);
     }
     
     // Check if crashed
@@ -69,6 +71,25 @@ const Crash: React.FC = () => {
       // Flash animation for crash
       if (graphRef.current) {
         graphRef.current.classList.add("crash-flash");
+        
+        // Add falling animation
+        const crashAnimation = () => {
+          const points = [...curvePointsRef.current];
+          
+          // Simulate falling curve by adding points that go down
+          for (let i = 0; i < 15; i++) {
+            const lastPoint = points[points.length - 1];
+            const newY = Math.max(0, lastPoint.y + (i * 3)); // Move down
+            const newX = lastPoint.x + (i * 0.5); // Move slightly right
+            points.push({ x: newX, y: newY });
+          }
+          
+          drawCrashPath(points);
+        };
+        
+        // Run crash animation after a small delay
+        setTimeout(crashAnimation, 100);
+        
         setTimeout(() => {
           if (graphRef.current) {
             graphRef.current.classList.remove("crash-flash");
@@ -87,32 +108,57 @@ const Crash: React.FC = () => {
   };
 
   // Generate points for the crash curve
-  const generateCrashCurve = (multiplier: number) => {
-    const points = [];
-    const steps = 50;
+  const updateCrashPath = (multiplier: number) => {
+    // Get the current width of the graph to scale properly
+    const graphWidth = graphRef.current?.clientWidth || 100;
+    const graphHeight = graphRef.current?.clientHeight || 100;
     
-    for (let i = 0; i <= steps; i++) {
-      const x = (i / steps) * Math.min(multiplier, 10) * 10;
-      const progress = i / steps;
-      // Exponential curve
-      const y = Math.pow(progress, 1.5) * 100;
-      points.push({ x, y });
-    }
+    // Calculate a new point based on current multiplier
+    const x = Math.min(multiplier, 10) * (graphWidth / 10); // Scale x by graph width
+    const y = graphHeight - (Math.log(multiplier) / Math.log(10)) * (graphHeight * 0.8); // Logarithmic scale for y
     
-    return points;
+    // Add the new point to our curve
+    curvePointsRef.current.push({ x, y });
+    
+    // Draw the updated path
+    drawCrashPath(curvePointsRef.current);
   };
   
-  // Update SVG path for crash curve
-  const updateCrashPath = (points: {x: number, y: number}[]) => {
+  // Draw the SVG path for the crash curve
+  const drawCrashPath = (points: {x: number, y: number}[]) => {
     const svgPath = document.getElementById("crash-path");
-    if (!svgPath) return;
+    if (!svgPath || points.length === 0) return;
     
-    let pathData = `M 0,100 `;
-    points.forEach(point => {
-      pathData += `L ${point.x},${100 - point.y} `;
-    });
+    let pathData = `M 0,${points[0].y} `;
+    
+    // Use a smoother curve with bezier
+    for (let i = 0; i < points.length; i++) {
+      if (i === 0) {
+        pathData += `L ${points[i].x},${points[i].y} `;
+      } else {
+        const prevPoint = points[i-1];
+        const currPoint = points[i];
+        
+        // Create smoother curve with quadratic bezier
+        if (i < points.length - 1) {
+          const nextPoint = points[i+1];
+          const controlX = (currPoint.x + nextPoint.x) / 2;
+          const controlY = currPoint.y;
+          pathData += `Q ${currPoint.x},${currPoint.y} ${controlX},${controlY} `;
+        } else {
+          pathData += `L ${currPoint.x},${currPoint.y} `;
+        }
+      }
+    }
     
     svgPath.setAttribute("d", pathData);
+    
+    // Update rocket position (if you want to add a rocket icon on the path)
+    const rocketIcon = document.getElementById("rocket-icon");
+    if (rocketIcon && points.length > 0) {
+      const lastPoint = points[points.length - 1];
+      rocketIcon.setAttribute("transform", `translate(${lastPoint.x - 12}, ${lastPoint.y - 12})`);
+    }
   };
 
   // Handle placing a bet - in Crash this starts the game
@@ -169,32 +215,67 @@ const Crash: React.FC = () => {
         
         {isRunning && (
           <div className="text-lg text-green-400 mb-8 flex items-center">
-            <ArrowUp className="mr-2 h-5 w-5 animate-bounce" />
+            <TrendingUp className="mr-2 h-5 w-5 animate-pulse" />
             Rising...
+          </div>
+        )}
+        
+        {hasCrashed && (
+          <div className="text-lg text-red-400 mb-8 flex items-center">
+            <TrendingDown className="mr-2 h-5 w-5 animate-pulse" />
+            Crashed!
           </div>
         )}
         
         <div 
           ref={graphRef}
-          className="h-48 w-full bg-black/30 rounded-xl mb-6 relative overflow-hidden"
+          className="h-48 w-full bg-black/30 rounded-xl mb-6 relative overflow-hidden border border-gray-700/50"
         >
           {/* SVG graph for crash animation */}
           <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <path
-              id="crash-path"
-              d="M 0,100 L 0,100"
-              fill="none"
-              stroke="url(#crash-gradient)"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
             <defs>
               <linearGradient id="crash-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#8B5CF6" />
                 <stop offset="100%" stopColor="#D946EF" />
               </linearGradient>
+              <filter id="glow" height="300%" width="300%" x="-75%" y="-75%">
+                <feGaussianBlur stdDeviation="5" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
             </defs>
+            <path
+              id="crash-path"
+              d="M 0,100 L 0,100"
+              fill="none"
+              stroke={isCrashing ? "url(#crash-gradient)" : "url(#crash-gradient)"}
+              strokeWidth="3"
+              strokeLinecap="round"
+              filter={currentMultiplier > 2 ? "url(#glow)" : ""}
+              className={isCrashing ? "animate-pulse" : ""}
+            />
+            {/* Rocket icon that follows the path */}
+            <g id="rocket-icon">
+              <polygon 
+                points="0,0 4,10 0,8 -4,10" 
+                fill={currentMultiplier > 2 ? "#D946EF" : "#8B5CF6"} 
+                transform="rotate(45)"
+                className={isRunning ? "animate-pulse" : ""}
+              />
+            </g>
           </svg>
+          
+          {/* Grid lines for better visualization */}
+          <div className="absolute inset-0 grid grid-cols-5 grid-rows-4 pointer-events-none">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={`vline-${i}`} className="h-full w-px bg-gray-700/30" style={{ left: `${(i + 1) * 20}%` }} />
+            ))}
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={`hline-${i}`} className="w-full h-px bg-gray-700/30" style={{ top: `${(i + 1) * 25}%` }} />
+            ))}
+          </div>
           
           {/* Multiplier markers */}
           <div className="absolute inset-0 flex justify-between px-4 text-xs text-gray-500">
@@ -208,7 +289,7 @@ const Crash: React.FC = () => {
         </div>
         
         {hasCrashed && (
-          <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 animate-pulse">
+          <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 backdrop-blur-sm animate-pulse">
             <span className="text-4xl font-bold text-red-500 transform rotate-12 shadow-xl">
               CRASHED AT {crashPoint.current.toFixed(2)}x
             </span>
