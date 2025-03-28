@@ -12,6 +12,7 @@ import CoinflipPage from "./pages/CoinflipPage";
 import DicePage from "./pages/DicePage";
 import CrashPage from "./pages/CrashPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/dice" element={<DicePage />} />
               <Route path="/crash" element={<CrashPage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
