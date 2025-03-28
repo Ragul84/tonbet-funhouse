@@ -1,8 +1,10 @@
 
 import React from "react";
 import { useGameContext } from "@/context/GameContext";
+import { useTelegramContext } from "@/context/TelegramContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Wallet } from "lucide-react";
 
 interface BetControlsProps {
   onBet: () => void;
@@ -11,9 +13,13 @@ interface BetControlsProps {
 
 const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) => {
   const { betAmount, setBetAmount, balance, isLoading } = useGameContext();
+  const { wallet, connectWallet } = useTelegramContext();
+
+  // Use wallet balance if connected, otherwise use game context balance
+  const availableBalance = wallet.connected ? Number(wallet.balance)/1e9 : balance;
 
   const increaseBet = (amount: number) => {
-    setBetAmount((prev) => Math.min(prev + amount, balance));
+    setBetAmount((prev) => Math.min(prev + amount, availableBalance));
   };
 
   const decreaseBet = (amount: number) => {
@@ -21,17 +27,32 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
   };
 
   const setMaxBet = () => {
-    setBetAmount(balance);
+    setBetAmount(availableBalance);
   };
 
   const handleBetAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
     if (!isNaN(value) && value >= 0) {
-      setBetAmount(Math.min(value, balance));
+      setBetAmount(Math.min(value, availableBalance));
     } else {
       setBetAmount(0);
     }
   };
+
+  if (!wallet.connected) {
+    return (
+      <div className="glass-card p-6 text-center">
+        <p className="text-gray-400 mb-4">Connect your TON wallet to place bets</p>
+        <Button 
+          onClick={connectWallet} 
+          className="bg-app-purple hover:bg-app-purple/90 w-full"
+        >
+          <Wallet className="mr-2 h-5 w-5" />
+          Connect Wallet
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card p-4 space-y-4">
@@ -53,7 +74,7 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
             onClick={() => increaseBet(5)} 
             variant="outline" 
             className="bg-black/30 hover:bg-app-purple/20 border-app-purple/30 h-8"
-            disabled={balance <= betAmount}
+            disabled={availableBalance <= betAmount}
           >
             +5
           </Button>
@@ -101,7 +122,7 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
 
       <Button 
         onClick={onBet} 
-        disabled={disabled || isLoading || betAmount <= 0 || betAmount > balance}
+        disabled={disabled || isLoading || betAmount <= 0 || betAmount > availableBalance}
         className="w-full bg-app-purple hover:bg-app-purple/90 hover:shadow-neon"
       >
         {isLoading ? "Placing Bet..." : "Place Bet"}

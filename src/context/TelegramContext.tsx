@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { toast } from "sonner";
 
 declare global {
   interface Window {
@@ -18,6 +19,15 @@ declare global {
         ready: () => void;
       };
     };
+    TON?: {
+      sendTransaction: (transaction: any) => Promise<any>;
+      send: (method: string, params: any) => Promise<any>;
+      on: (eventName: string, callback: (result: any) => void) => void;
+      isWalletInjected: boolean;
+      address: string | null;
+      balance: string | null;
+      connect: () => Promise<{ address: string, balance: string }>;
+    };
   }
 }
 
@@ -28,9 +38,17 @@ interface TelegramUser {
   lastName?: string;
 }
 
+interface WalletInfo {
+  connected: boolean;
+  address: string | null;
+  balance: string | null;
+}
+
 interface TelegramContextType {
   user: TelegramUser | null;
   isLoading: boolean;
+  wallet: WalletInfo;
+  connectWallet: () => Promise<void>;
 }
 
 const TelegramContext = createContext<TelegramContextType | null>(null);
@@ -46,6 +64,53 @@ export const useTelegramContext = () => {
 export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<TelegramUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [wallet, setWallet] = useState<WalletInfo>({
+    connected: false,
+    address: null,
+    balance: null
+  });
+
+  const connectWallet = async () => {
+    try {
+      if (!window.TON) {
+        toast.error("TON wallet not detected. Please install TON wallet extension or use the TON app.");
+        return;
+      }
+
+      if (wallet.connected) {
+        toast.info("Already connected to wallet");
+        return;
+      }
+
+      const result = await window.TON.connect();
+      
+      setWallet({
+        connected: true,
+        address: result.address,
+        balance: result.balance
+      });
+
+      toast.success("Wallet connected successfully!");
+    } catch (error) {
+      console.error("Error connecting wallet:", error);
+      toast.error("Failed to connect wallet. Please try again.");
+    }
+  };
+
+  // Listen for wallet changes
+  useEffect(() => {
+    if (window.TON) {
+      window.TON.on('accountsChanged', (accounts: string[]) => {
+        if (accounts.length === 0) {
+          setWallet({
+            connected: false,
+            address: null,
+            balance: null
+          });
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const initializeTelegram = () => {
@@ -96,7 +161,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   return (
-    <TelegramContext.Provider value={{ user, isLoading }}>
+    <TelegramContext.Provider value={{ user, isLoading, wallet, connectWallet }}>
       {children}
     </TelegramContext.Provider>
   );

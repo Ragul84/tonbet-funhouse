@@ -53,7 +53,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [bets, setBets] = useState<Bet[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [userStats, setUserStats] = useState<UserStats[]>([]);
-  const { user } = useTelegramContext();
+  const { user, wallet } = useTelegramContext();
 
   // Current user stats
   const currentUserStats = user ? userStats.find(stats => stats.userId === user.id) || null : null;
@@ -111,13 +111,55 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    if (betAmount > balance) {
-      toast.error("Insufficient balance");
-      return false;
+    // Check if wallet is connected
+    if (wallet.connected) {
+      if (!wallet.address || !wallet.balance) {
+        toast.error("Wallet not properly connected");
+        return false;
+      }
+
+      const availableBalance = Number(wallet.balance)/1e9;
+      
+      if (betAmount > availableBalance) {
+        toast.error("Insufficient wallet balance");
+        return false;
+      }
+    } else {
+      // Using simulated balance for demo
+      if (betAmount > balance) {
+        toast.error("Insufficient balance");
+        return false;
+      }
     }
 
     setIsLoading(true);
-    setBalance((prev) => prev - betAmount);
+
+    // If wallet is connected, try to send a real transaction
+    if (wallet.connected && window.TON) {
+      try {
+        // TODO: Replace with actual contract interaction logic
+        // This is a placeholder for real blockchain transactions
+        toast.info("Processing transaction...");
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // In a real implementation, this would be a call to a smart contract
+        // const txResult = await window.TON.sendTransaction({
+        //   to: 'CONTRACT_ADDRESS',
+        //   value: betAmount * 1e9, // Convert to nanoTON
+        //   data: 'encoded_bet_data'
+        // });
+        
+        // For demo purposes, we're simulating the transaction result
+      } catch (error) {
+        console.error("Transaction error:", error);
+        toast.error("Transaction failed. Please try again.");
+        setIsLoading(false);
+        return false;
+      }
+    } else {
+      // Using simulated balance for demo
+      setBalance((prev) => prev - betAmount);
+    }
 
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -167,9 +209,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Update user stats
     updateUserStats(user.id, user.username, betAmount, isWin, winAmount);
 
-    // Update balance if won
+    // If using simulated balance, update it
+    if (!wallet.connected) {
+      // Update balance if won
+      if (isWin) {
+        setBalance((prev) => prev + winAmount);
+      }
+    }
+
     if (isWin) {
-      setBalance((prev) => prev + winAmount);
       toast.success(`You won ${winAmount.toFixed(2)} TON!`);
     } else {
       toast.error("Better luck next time!");

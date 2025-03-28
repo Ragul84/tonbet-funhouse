@@ -1,13 +1,14 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { CircleDollarSign, Trophy, Home, Coins, Dice1, TrendingUp, User } from "lucide-react";
+import { CircleDollarSign, Trophy, Home, Coins, Dice1, TrendingUp, User, Wallet } from "lucide-react";
 import { useGameContext } from "@/context/GameContext";
 import { useTelegramContext } from "@/context/TelegramContext";
+import { Button } from "@/components/ui/button";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { balance } = useGameContext();
-  const { user } = useTelegramContext();
+  const { user, wallet, connectWallet } = useTelegramContext();
   const location = useLocation();
 
   const navigation = [
@@ -18,6 +19,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { name: "Leaderboard", path: "/leaderboard", icon: Trophy },
     { name: "Profile", path: "/profile", icon: User },
   ];
+
+  // Format wallet address for display
+  const formatAddress = (address: string | null) => {
+    if (!address) return "";
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -32,9 +39,27 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               @{user.username}
             </div>
           )}
+          
+          {wallet.connected ? (
+            <div className="flex items-center space-x-2 bg-black/20 px-3 py-2 rounded-full">
+              <Wallet className="h-4 w-4 text-ton" />
+              <span className="text-xs font-medium">{formatAddress(wallet.address)}</span>
+            </div>
+          ) : (
+            <Button 
+              onClick={connectWallet} 
+              variant="outline" 
+              size="sm"
+              className="bg-black/20 hover:bg-app-purple/20 border-app-purple/30 text-white"
+            >
+              <Wallet className="h-4 w-4 mr-2" />
+              Connect Wallet
+            </Button>
+          )}
+          
           <div className="flex items-center space-x-2 bg-black/20 px-4 py-2 rounded-full">
             <CircleDollarSign className="h-5 w-5 text-ton" />
-            <span className="font-medium">{balance.toFixed(2)} TON</span>
+            <span className="font-medium">{wallet.connected ? (Number(wallet.balance)/1e9).toFixed(2) : balance.toFixed(2)} TON</span>
           </div>
         </div>
       </header>
