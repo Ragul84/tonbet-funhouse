@@ -1,22 +1,29 @@
 
 import { toast } from "sonner";
-import { Address } from "@ton/core";
 
 /**
  * Formats a TON wallet address to a user-friendly format.
  * 
  * @param address The raw wallet address (e.g. 0:90b9...928d)
- * @returns The user-friendly format starting with UQ
+ * @returns The user-friendly formatted address
  */
 export const formatTonAddress = (address: string | null): string | null => {
   if (!address) return null;
   
-  // If the address is already in UQ format, return it
-  if (address.startsWith('UQ')) return address;
-  
   try {
-    // Properly format the address using @ton/core
-    return Address.parseRaw(address).toString({bounceable: true, urlSafe: true});
+    // Since we can't use @ton/core in the browser directly due to Buffer issues,
+    // we'll use a simpler approach for formatting the address
+    if (address.includes(':')) {
+      const parts = address.split(':');
+      if (parts.length === 2) {
+        // Take first 6 and last 4 characters for a simplified display
+        const shortAddress = `${parts[0]}:${parts[1].slice(0, 6)}...${parts[1].slice(-4)}`;
+        return shortAddress;
+      }
+    }
+    
+    // If the format doesn't match what we expect, return as is
+    return address;
   } catch (error) {
     console.error("Error formatting TON address:", error);
     toast.error("Failed to format wallet address");

@@ -29,7 +29,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { name: "Profile", path: "/profile", icon: User },
   ];
 
-  // Format wallet address for display - use the formattedAddress from wallet object
+  // Format wallet address for display - simply use the formattedAddress from wallet object
   const formatAddress = () => {
     return wallet.formattedAddress || "";
   };
