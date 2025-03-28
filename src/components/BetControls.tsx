@@ -41,15 +41,28 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
 
   if (!wallet.connected) {
     return (
-      <div className="glass-card p-6 text-center">
-        <p className="text-gray-400 mb-4">Connect your TON wallet to place bets</p>
-        <Button 
-          onClick={connectWallet} 
-          className="bg-app-purple hover:bg-app-purple/90 w-full"
-        >
-          <Wallet className="mr-2 h-5 w-5" />
-          Connect Wallet
-        </Button>
+      <div className="glass-card p-6 backdrop-blur-xl border border-white/10 shadow-xl relative overflow-hidden">
+        <div className="absolute -top-20 right-20 w-40 h-40 rounded-full bg-app-purple/20 filter blur-3xl"></div>
+        <div className="absolute -bottom-20 left-20 w-40 h-40 rounded-full bg-yellow-500/10 filter blur-3xl"></div>
+        
+        <div className="text-center space-y-4 relative z-10">
+          <div className="flex justify-center mb-2">
+            <div className="p-3 bg-black/30 rounded-full">
+              <Wallet className="h-8 w-8 text-app-purple animate-pulse" />
+            </div>
+          </div>
+          <h3 className="text-lg font-bold bg-gradient-to-r from-white via-purple-200 to-app-purple bg-clip-text text-transparent">
+            Connect Your Wallet
+          </h3>
+          <p className="text-gray-400 mb-6">Connect your TON wallet to place bets and win real crypto!</p>
+          <Button 
+            onClick={connectWallet} 
+            className="bg-app-purple hover:bg-app-purple/90 w-full py-6 shadow-lg hover:shadow-app-purple/20 transition-all duration-300"
+          >
+            <Wallet className="mr-2 h-5 w-5" />
+            Connect Wallet
+          </Button>
+        </div>
       </div>
     );
   }
