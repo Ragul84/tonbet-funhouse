@@ -37,14 +37,19 @@ async function main() {
     console.warn("Could not read addresses.json, using placeholders");
   }
   
+  // Determine network from environment variable
+  const isTestnet = process.env.USE_TESTNET && 
+    (process.env.USE_TESTNET.toLowerCase() === "true" || 
+     process.env.USE_TESTNET === "1");
+  
   // Casino address is not required initially, it can be updated later
   // Use the appropriate address based on network
-  const isTestnet = process.env.USE_TESTNET === "true";
   const casinoAddress = isTestnet ? 
     contractAddresses.testnet : 
     contractAddresses.mainnet;
   
   console.log(`🎰 Initial casino address: ${casinoAddress} (can be updated later)`);
+  console.log(`🌐 Network: ${isTestnet ? "TESTNET" : "MAINNET"}`);
 
   // Create initial data cell (contract state)
   const dataCell = beginCell()
@@ -56,8 +61,6 @@ async function main() {
   // Calculate contract address
   const contractAddr = calculateContractAddress(0, { code: randomnessCode, data: dataCell });
   console.log(`\n📍 Randomness contract address: ${contractAddr.toString()}`);
-  
-  console.log(`🌐 Network: ${isTestnet ? "TESTNET" : "MAINNET"}`);
   
   // Save the address to a file for easy access
   const randomnessAddresses = JSON.parse(fs.readFileSync("src/contracts/randomnessAddress.json", "utf8"));

@@ -29,7 +29,10 @@ async function main() {
   console.log(`👤 Owner address: ${ownerAddress}`);
   
   // Determine if we're using testnet
-  const isTestnet = process.env.USE_TESTNET === "true";
+  const isTestnet = process.env.USE_TESTNET && 
+    (process.env.USE_TESTNET.toLowerCase() === "true" || 
+     process.env.USE_TESTNET === "1");
+  
   console.log(`🌐 Network: ${isTestnet ? "TESTNET" : "MAINNET"}`);
 
   // Get randomness address from environment or try to read from the file

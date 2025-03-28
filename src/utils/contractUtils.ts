@@ -1,3 +1,4 @@
+
 import { Address } from '@ton/core';
 
 // Import contract addresses (these will be populated after deployment)
@@ -10,8 +11,11 @@ export const TESTNET_CONTRACT_ADDRESS = contractAddresses.testnet;
 export const MAINNET_RANDOMNESS_ADDRESS = randomnessAddresses.mainnet;
 export const TESTNET_RANDOMNESS_ADDRESS = randomnessAddresses.testnet;
 
-// Use mainnet by default for production deployment
-export const USE_TESTNET = false;
+// Determine if we should use testnet based on environment variable
+// Using explicit environment check to avoid potential issues
+export const USE_TESTNET = !!(process.env.USE_TESTNET && 
+  (process.env.USE_TESTNET.toLowerCase() === "true" || 
+   process.env.USE_TESTNET === "1"));
 
 // Game parameters
 export const HOUSE_EDGE_PERCENT = 2; // 2% house edge
