@@ -42,6 +42,7 @@ interface TelegramContextType {
   isLoading: boolean;
   wallet: WalletInfo;
   connectWallet: () => Promise<void>;
+  disconnectWallet: () => void;
   setProfileImage: (imagePath: string) => void;
 }
 
@@ -83,6 +84,27 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  // Disconnect from TON wallet
+  const disconnectWallet = () => {
+    try {
+      if (!wallet.connected) {
+        toast.info("No wallet connected");
+        return;
+      }
+      
+      tonConnectUI.disconnect();
+      setWallet({
+        connected: false,
+        address: null,
+        balance: null
+      });
+      toast.success("Wallet disconnected successfully!");
+    } catch (error) {
+      console.error("Error disconnecting wallet:", error);
+      toast.error("Failed to disconnect wallet. Please try again.");
+    }
+  };
+
   // Monitor wallet connection status
   useEffect(() => {
     if (!tonConnectUI) return;
@@ -98,9 +120,8 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // Fetch wallet balance (this is a simplified example)
         // In a real app, you would use a TON client library to query the blockchain
         const simulateBalanceFetch = async () => {
-          // Simulate balance fetch for demo purposes
-          // In production, use TON API or library
-          const mockBalance = Math.floor(Math.random() * 100000) * 1e9; // Random TON amount
+          // Simulate balance fetch with a more reasonable amount (1-10 TON)
+          const mockBalance = (1 + Math.random() * 9) * 1e9; // Random TON amount between 1-10 TON
           setWallet(prev => ({
             ...prev,
             balance: mockBalance.toString()
@@ -186,7 +207,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   return (
-    <TelegramContext.Provider value={{ user, isLoading, wallet, connectWallet, setProfileImage }}>
+    <TelegramContext.Provider value={{ user, isLoading, wallet, connectWallet, disconnectWallet, setProfileImage }}>
       {children}
     </TelegramContext.Provider>
   );

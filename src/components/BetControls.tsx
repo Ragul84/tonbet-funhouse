@@ -4,7 +4,7 @@ import { useGameContext } from "@/context/GameContext";
 import { useTelegramContext } from "@/context/TelegramContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Wallet } from "lucide-react";
+import { Wallet, LogOut } from "lucide-react";
 
 interface BetControlsProps {
   onBet: () => void;
@@ -13,7 +13,7 @@ interface BetControlsProps {
 
 const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) => {
   const { betAmount, setBetAmount, balance, isLoading } = useGameContext();
-  const { wallet, connectWallet } = useTelegramContext();
+  const { wallet, connectWallet, disconnectWallet } = useTelegramContext();
 
   // Use wallet balance if connected, otherwise use game context balance
   const availableBalance = wallet.connected ? Number(wallet.balance)/1e9 : balance;
@@ -56,6 +56,19 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
 
   return (
     <div className="glass-card p-4 space-y-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm text-gray-400">Connected Wallet</span>
+        <Button
+          onClick={disconnectWallet}
+          variant="outline"
+          size="sm"
+          className="bg-black/30 hover:bg-red-500/20 border-red-500/30 text-white"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Disconnect
+        </Button>
+      </div>
+      
       <div className="flex items-center space-x-4">
         <div className="flex-1">
           <label htmlFor="bet-amount" className="block text-sm text-gray-400 mb-1">

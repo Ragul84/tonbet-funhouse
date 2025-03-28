@@ -1,16 +1,22 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { CircleDollarSign, Trophy, Home, Coins, Dice1, TrendingUp, User, Wallet } from "lucide-react";
+import { CircleDollarSign, Trophy, Home, Coins, Dice1, TrendingUp, User, Wallet, LogOut } from "lucide-react";
 import { useGameContext } from "@/context/GameContext";
 import { useTelegramContext } from "@/context/TelegramContext";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { balance } = useGameContext();
-  const { user, wallet, connectWallet } = useTelegramContext();
+  const { user, wallet, connectWallet, disconnectWallet } = useTelegramContext();
   const location = useLocation();
   const isMobile = useIsMobile();
 
@@ -56,9 +62,26 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           )}
           
           {wallet.connected ? (
-            <div className="flex items-center space-x-2 neomorphic-wallet px-3 py-2 rounded-full">
-              <Wallet className="h-4 w-4 text-app-purple" />
-              <span className="text-xs font-medium text-white">{formatAddress(wallet.address)}</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center space-x-2 neomorphic-wallet px-3 py-2 rounded-full">
+                <Wallet className="h-4 w-4 text-app-purple" />
+                <span className="text-xs font-medium text-white">{formatAddress(wallet.address)}</span>
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    onClick={disconnectWallet} 
+                    variant="outline" 
+                    size="sm"
+                    className="neomorphic-button hover:bg-red-500/20 border-red-500/30 text-white p-2 h-8 w-8"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Disconnect Wallet</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           ) : (
             <Button 
