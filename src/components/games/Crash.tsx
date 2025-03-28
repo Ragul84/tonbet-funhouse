@@ -79,6 +79,15 @@ const Crash: React.FC = () => {
     
     startTime.current = Date.now();
     
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    
+    if (graphRef.current) {
+      const graphHeight = graphRef.current.clientHeight || 200;
+      curvePointsRef.current.push({ x: 0, y: graphHeight - 30 });
+    }
+    
     animationRef.current = requestAnimationFrame(updateMultiplier);
   };
 
@@ -105,15 +114,17 @@ const Crash: React.FC = () => {
         
         const crashAnimation = () => {
           const points = [...curvePointsRef.current];
-          
-          for (let i = 0; i < 15; i++) {
+          if (points.length > 1) {
             const lastPoint = points[points.length - 1];
-            const newY = Math.max(0, lastPoint.y + (i * 3));
-            const newX = lastPoint.x + (i * 0.5);
-            points.push({ x: newX, y: newY });
+            
+            for (let i = 0; i < 15; i++) {
+              const newY = Math.max(0, lastPoint.y + (i * 3));
+              const newX = lastPoint.x + (i * 0.5);
+              points.push({ x: newX, y: newY });
+            }
+            
+            drawCrashPath(points);
           }
-          
-          drawCrashPath(points);
         };
         
         setTimeout(crashAnimation, 100);
@@ -136,10 +147,13 @@ const Crash: React.FC = () => {
   };
 
   const updateCrashPath = (multiplier: number) => {
-    const graphWidth = graphRef.current?.clientWidth || 300;
-    const graphHeight = graphRef.current?.clientHeight || 200;
+    if (!graphRef.current) return;
+    
+    const graphWidth = graphRef.current.clientWidth || 300;
+    const graphHeight = graphRef.current.clientHeight || 200;
     
     const x = Math.min(multiplier, 10) * (graphWidth / 10);
+    
     const y = graphHeight - (Math.log(multiplier) / Math.log(10)) * (graphHeight * 0.8);
     
     curvePointsRef.current.push({ x, y });
@@ -149,45 +163,40 @@ const Crash: React.FC = () => {
 
   const drawCrashPath = (points: {x: number, y: number}[]) => {
     const svgPath = document.getElementById("crash-path");
-    if (!svgPath || points.length === 0) return;
+    if (!svgPath || points.length < 2) return;
     
-    let pathData = `M 0,${points[0].y} `;
+    let pathData = `M ${points[0].x},${points[0].y} `;
     
-    for (let i = 0; i < points.length; i++) {
-      if (i === 0) {
-        pathData += `L ${points[i].x},${points[i].y} `;
+    for (let i = 1; i < points.length; i++) {
+      const prevPoint = points[i-1];
+      const currPoint = points[i];
+      
+      if (i < points.length - 1) {
+        const nextPoint = points[i+1];
+        const controlX = (currPoint.x + nextPoint.x) / 2;
+        const controlY = currPoint.y;
+        pathData += `Q ${currPoint.x},${currPoint.y} ${controlX},${controlY} `;
       } else {
-        const prevPoint = points[i-1];
-        const currPoint = points[i];
-        
-        if (i < points.length - 1) {
-          const nextPoint = points[i+1];
-          const controlX = (currPoint.x + nextPoint.x) / 2;
-          const controlY = currPoint.y;
-          pathData += `Q ${currPoint.x},${currPoint.y} ${controlX},${controlY} `;
-        } else {
-          pathData += `L ${currPoint.x},${currPoint.y} `;
-        }
+        pathData += `L ${currPoint.x},${currPoint.y} `;
       }
     }
     
     svgPath.setAttribute("d", pathData);
     
-    if (points.length > 0) {
+    if (points.length > 1) {
       const lastPoint = points[points.length - 1];
       
       const rocketIcon = document.getElementById("rocket-icon");
       if (rocketIcon) {
-        rocketIcon.setAttribute("transform", `translate(${lastPoint.x - 10}, ${lastPoint.y - 10})`);
-        rocketIcon.setAttribute("opacity", "1");
-        
         if (isCrashing) {
           rocketIcon.setAttribute("transform", `translate(${lastPoint.x - 10}, ${lastPoint.y - 10}) rotate(135)`);
-        } else {
+        } else if (points.length > 1) {
           const prevPoint = points[points.length - 2];
           const angle = Math.atan2(lastPoint.y - prevPoint.y, lastPoint.x - prevPoint.x) * (180 / Math.PI);
           rocketIcon.setAttribute("transform", `translate(${lastPoint.x - 10}, ${lastPoint.y - 10}) rotate(${angle})`);
         }
+        
+        rocketIcon.setAttribute("opacity", "1");
       }
     }
   };
