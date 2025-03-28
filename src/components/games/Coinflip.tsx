@@ -4,6 +4,7 @@ import { useGameContext } from "@/context/GameContext";
 import BetControls from "@/components/BetControls";
 import { Button } from "@/components/ui/button";
 import { Coins } from "lucide-react";
+import MouseTrail from "@/components/MouseTrail";
 
 const Coinflip: React.FC = () => {
   const { placeBet, isLoading, trialPlaysLeft, setCurrentGame } = useGameContext();
@@ -50,8 +51,19 @@ const Coinflip: React.FC = () => {
     }, 1500);
   };
 
+  // Define colors for the coinflip trail
+  const coinTrailColors = [
+    "#F97316", // Bright Orange
+    "#D946EF", // Magenta Pink
+    "#FDE1D3", // Soft Peach
+    "#FFDEE2", // Soft Pink
+  ];
+
   return (
     <div className="space-y-6">
+      {/* Mouse trail effect */}
+      <MouseTrail colors={coinTrailColors} size={10} />
+      
       <h1 className="text-3xl font-bold text-center text-white">Coinflip</h1>
       <p className="text-center text-gray-400">
         Choose heads or tails and win 1.8x your bet if you're right!
