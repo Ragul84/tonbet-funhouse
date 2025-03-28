@@ -212,9 +212,30 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         break;
       case "crash":
         // For crash, prediction is the cash-out multiplier
-        const crashPoint = (0.9 + Math.random() * 9).toFixed(2);
-        // Adjust crash win rate
-        isWin = Number(crashPoint) > prediction && generateOutcome(winRate);
+        // Now using a more realistic crash algorithm:
+        let crashPoint;
+        
+        const randomValue = Math.random();
+        if (randomValue < 0.15) {
+          // 15% chance of very early crash (1.0x to 1.2x)
+          crashPoint = (1.0 + (Math.random() * 0.2)).toFixed(2);
+        } else if (randomValue < 0.65) {
+          // 50% chance of crash between 1.2x and 3x
+          crashPoint = (1.2 + (Math.random() * 1.8)).toFixed(2);
+        } else if (randomValue < 0.90) {
+          // 25% chance of crash between 3x and 8x
+          crashPoint = (3.0 + (Math.random() * 5.0)).toFixed(2);
+        } else if (randomValue < 0.98) {
+          // 8% chance of crash between 8x and 20x
+          crashPoint = (8.0 + (Math.random() * 12.0)).toFixed(2);
+        } else {
+          // 2% chance of crash above 20x (up to 50x)
+          crashPoint = (20.0 + (Math.random() * 30.0)).toFixed(2);
+        }
+        
+        // Adjust win rate based on prediction
+        const adjustedWinRate = winRate * (1 / prediction); // Harder to win with higher multiplier targets
+        isWin = Number(crashPoint) > prediction && generateOutcome(adjustedWinRate);
         break;
     }
 

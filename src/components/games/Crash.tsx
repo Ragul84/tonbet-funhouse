@@ -44,13 +44,42 @@ const Crash: React.FC = () => {
     const graphWidth = graphRef.current?.clientWidth || 300;
     const graphHeight = graphRef.current?.clientHeight || 200;
     
-    // Position the rocket slightly above the 1x position
+    // Position the rocket in the proper starting position
     if (rocketIcon) {
-      const initialX = 0; // Start at left edge
+      const initialX = 30; // Starting position just after 1x label
       const initialY = graphHeight - 20; // Just above the bottom
       
       rocketIcon.setAttribute("transform", `translate(${initialX}, ${initialY}) rotate(0)`);
       rocketIcon.setAttribute("opacity", "1");
+    }
+  };
+  
+  // Generate more realistic crash points based on house edge
+  const generateCrashPoint = (): number => {
+    // Using a more realistic algorithm for crash points that:
+    // 1. Sometimes crashes very early (1.0x to 1.2x) - about 15-20% of the time
+    // 2. Most often crashes between 1.2x and 3x - about 50% of the time
+    // 3. Sometimes reaches 3x to 8x - about 20% of the time
+    // 4. Rarely reaches above 8x - about 10% of the time
+    // 5. Very rarely reaches very high multipliers (20x+) - about 1% of the time
+    
+    const randomValue = Math.random();
+    
+    if (randomValue < 0.20) {
+      // 20% chance of very early crash (1.0x to 1.2x)
+      return 1.0 + (Math.random() * 0.2);
+    } else if (randomValue < 0.70) {
+      // 50% chance of crash between 1.2x and 3x
+      return 1.2 + (Math.random() * 1.8);
+    } else if (randomValue < 0.90) {
+      // 20% chance of crash between 3x and 8x
+      return 3.0 + (Math.random() * 5.0);
+    } else if (randomValue < 0.99) {
+      // 9% chance of crash between 8x and 20x
+      return 8.0 + (Math.random() * 12.0);
+    } else {
+      // 1% chance of crash above 20x (up to 100x)
+      return 20.0 + (Math.random() * 80.0);
     }
   };
   
@@ -64,8 +93,11 @@ const Crash: React.FC = () => {
     setCanCashOut(true);
     curvePointsRef.current = [];
     
-    // Generate a crash point between 1 and 10
-    crashPoint.current = 1 + Math.random() * 9;
+    // Generate a crash point using our new algorithm
+    crashPoint.current = generateCrashPoint();
+    
+    console.log("Game started with crash point:", crashPoint.current.toFixed(2) + "x");
+    
     startTime.current = Date.now();
     
     // Start the animation
@@ -75,8 +107,12 @@ const Crash: React.FC = () => {
   // Update the multiplier based on time
   const updateMultiplier = () => {
     const elapsedTime = (Date.now() - startTime.current) / 1000; // in seconds
-    // Use a smoother growth function for more natural curve
-    const newMultiplier = Math.pow(Math.E, 0.06 * elapsedTime);
+    
+    // Use a growth function that's faster initially and slows down over time
+    // for more unpredictable and exciting gameplay
+    const growthRate = 0.06 + (Math.random() * 0.02); // Slight randomization in growth rate
+    const newMultiplier = Math.pow(Math.E, growthRate * elapsedTime);
+    
     setCurrentMultiplier(newMultiplier);
     
     // Update the animation graph
