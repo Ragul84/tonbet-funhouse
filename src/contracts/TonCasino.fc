@@ -23,6 +23,7 @@ const int op::resolve_bet = 2;
 const int op::claim_winnings = 3;
 const int op::withdraw_profits = 5;
 const int op::add_house_funds = 6;
+const int op::request_random = 1;  ;; Same as in randomness contract
 
 ;; Game types
 const int game::coinflip = 1;
@@ -148,6 +149,25 @@ int calculate_payout(int amount, int game_type, int prediction) impure {
     .store_uint(prediction, 32)
     .store_coins(msg_value)
     .end_cell());
+    
+  ;; Request randomness for this bet
+  request_randomness(bet_id);
+}
+
+;; Send a request to the randomness provider
+() request_randomness(slice bet_id) impure {
+  ;; Create message to send to randomness provider
+  cell msg = begin_cell()
+    .store_uint(0x10, 6) ;; non-bouncing message
+    .store_slice(randomness_source)
+    .store_coins(100000000) ;; 0.1 TON for gas
+    .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1) ;; default message header
+    .store_uint(op::request_random, 32) ;; operation
+    .store_slice(bet_id) ;; bet ID
+    .end_cell();
+    
+  ;; Send the message
+  send_raw_message(msg, 1); ;; pay transfer fees separately
 }
 
 ;; Process bet resolution with provided randomness

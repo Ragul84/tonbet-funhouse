@@ -1,0 +1,181 @@
+
+;; Randomness Provider Smart Contract for TON Casino
+;; SPDX-License-Identifier: MIT
+
+#pragma version >=0.4.0;
+
+#include "imports/stdlib.fc";
+#include "imports/utils.fc";
+
+;; Storage variables
+global slice owner_address;
+global slice casino_address;
+global cell request_dict;
+
+;; Constants
+const int op::request_random = 1;
+const int op::provide_random = 2;
+const int op::update_casino = 3;
+
+;; Load contract storage
+() load_data() impure {
+  var ds = get_data().begin_parse();
+  owner_address = ds~load_msg_addr();
+  casino_address = ds~load_msg_addr();
+  request_dict = ds~load_dict();
+  ds.end_parse();
+}
+
+;; Save contract storage
+() save_data() impure {
+  set_data(begin_cell()
+    .store_slice(owner_address)
+    .store_slice(casino_address)
+    .store_dict(request_dict)
+    .end_cell());
+}
+
+;; Only owner modifier check
+() only_owner() impure {
+  throw_unless(401, equal_slices(sender_address(), owner_address));
+}
+
+;; Only casino modifier check
+() only_casino() impure {
+  throw_unless(402, equal_slices(sender_address(), casino_address));
+}
+
+;; Generate a random value using multiple sources of entropy
+int generate_random_value(slice request_id) {
+  ;; Combine multiple sources of entropy for better randomness
+  ;; 1. Current blockchain state (time, etc)
+  ;; 2. Transaction data
+  ;; 3. Contract-specific data
+  
+  ;; Create a seed based on the current time
+  int time_seed = now();
+  
+  ;; Add block data entropy
+  int block_entropy = cell_hash(begin_cell().store_uint(time_seed, 64).end_cell());
+  
+  ;; Add request-specific entropy
+  int request_entropy = slice_hash(request_id);
+  
+  ;; Combine all sources of entropy
+  int combined_seed = time_seed ^ block_entropy ^ request_entropy;
+  
+  ;; Generate the random value
+  return pseudo_random(combined_seed);
+}
+
+;; Store a random value request
+() store_request(slice request_id) impure {
+  ;; Record that we've seen this request
+  request_dict = dict_set(request_dict, 256, request_id, begin_cell().store_uint(1, 1).end_cell());
+}
+
+;; Check if a request has already been processed
+int is_request_processed(slice request_id) {
+  (cell value, int found) = dict_get?(request_dict, 256, request_id);
+  return found;
+}
+
+;; Send random value to the casino
+() send_random_to_casino(slice bet_id, int random_value) impure {
+  ;; Create message to send to the casino contract
+  cell msg = begin_cell()
+    .store_uint(0x10, 6) ;; non-bouncing message
+    .store_slice(casino_address)
+    .store_coins(50000000) ;; 0.05 TON for gas
+    .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1) ;; default message header
+    .store_uint(op::provide_random, 32) ;; operation
+    .store_slice(bet_id) ;; bet ID
+    .store_uint(random_value, 256) ;; random value
+    .end_cell();
+    
+  ;; Send the message
+  send_raw_message(msg, 1); ;; pay transfer fees separately
+}
+
+;; Update the casino address (if needed in the future)
+() update_casino_address(slice new_casino_address) impure {
+  only_owner();
+  casino_address = new_casino_address;
+  save_data();
+}
+
+;; Main entry point
+() recv_internal(int msg_value, cell in_msg_full, slice in_msg_body) impure {
+  ;; Load contract data
+  load_data();
+  
+  ;; Extract sender address
+  slice cs = in_msg_full.begin_parse();
+  int flags = cs~load_uint(4);
+  slice sender_address = cs~load_msg_addr();
+  
+  ;; Handle empty message (simple TON transfer)
+  if (in_msg_body.slice_empty?()) {
+    return save_data();
+  }
+  
+  ;; Process message by op code
+  int op = in_msg_body~load_uint(32);
+  
+  if (op == op::request_random) {
+    ;; Only accept requests from the casino contract
+    only_casino();
+    
+    ;; Extract the bet ID
+    slice bet_id = in_msg_body~load_msg_addr();
+    
+    ;; Check if we've already processed this request
+    throw_if(403, is_request_processed(bet_id));
+    
+    ;; Store the request
+    store_request(bet_id);
+    
+    ;; Generate a random value
+    int random_value = generate_random_value(bet_id);
+    
+    ;; Send the random value back to the casino
+    send_random_to_casino(bet_id, random_value);
+    
+    ;; Save the updated state
+    save_data();
+  }
+  
+  elseif (op == op::update_casino) {
+    ;; Update the casino address
+    slice new_casino_address = in_msg_body~load_msg_addr();
+    update_casino_address(new_casino_address);
+  }
+  
+  save_data();
+}
+
+;; Get methods for external queries
+
+;; Check if the address matches the owner
+int is_owner(slice addr) method_id {
+  load_data();
+  return equal_slices(addr, owner_address);
+}
+
+;; Check if the address matches the casino
+int is_casino(slice addr) method_id {
+  load_data();
+  return equal_slices(addr, casino_address);
+}
+
+;; Get the owner address
+slice get_owner() method_id {
+  load_data();
+  return owner_address;
+}
+
+;; Get the casino address
+slice get_casino() method_id {
+  load_data();
+  return casino_address;
+}
