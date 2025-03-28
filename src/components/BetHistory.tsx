@@ -3,13 +3,19 @@ import React from "react";
 import { useGameContext } from "@/context/GameContext";
 import { format } from "date-fns";
 
-const BetHistory: React.FC = () => {
+interface BetHistoryProps {
+  gameType?: string;
+}
+
+const BetHistory: React.FC<BetHistoryProps> = ({ gameType }) => {
   const { bets, currentGame } = useGameContext();
   
-  // Filter bets by the current game
-  const filteredBets = currentGame 
-    ? bets.filter(bet => bet.game === currentGame)
-    : bets;
+  // Filter bets by the gameType prop or currentGame context
+  const filteredBets = gameType 
+    ? bets.filter(bet => bet.game === gameType)
+    : currentGame
+      ? bets.filter(bet => bet.game === currentGame)
+      : bets;
 
   if (filteredBets.length === 0) {
     return null;
@@ -18,7 +24,11 @@ const BetHistory: React.FC = () => {
   return (
     <div className="glass-card p-4">
       <h3 className="text-lg font-medium mb-4">
-        {currentGame ? `${currentGame.charAt(0).toUpperCase() + currentGame.slice(1)} History` : "Bet History"}
+        {gameType 
+          ? `${gameType.charAt(0).toUpperCase() + gameType.slice(1)} History` 
+          : currentGame 
+            ? `${currentGame.charAt(0).toUpperCase() + currentGame.slice(1)} History` 
+            : "Bet History"}
       </h3>
       <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
         {filteredBets.map((bet) => (
