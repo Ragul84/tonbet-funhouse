@@ -4,6 +4,7 @@ import { useGameContext } from "@/context/GameContext";
 import BetControls from "@/components/BetControls";
 import { Button } from "@/components/ui/button";
 import { Coins, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from "lucide-react";
+import MouseTrail from "@/components/MouseTrail";
 
 const Dice: React.FC = () => {
   const { placeBet, isLoading, trialPlaysLeft, setCurrentGame } = useGameContext();
@@ -69,8 +70,19 @@ const Dice: React.FC = () => {
     }
   };
 
+  // Define colors for the dice trail
+  const diceTrailColors = [
+    "#9b87f5", // Primary Purple
+    "#7E69AB", // Secondary Purple
+    "#6E59A5", // Tertiary Purple
+    "#D6BCFA", // Light Purple
+  ];
+
   return (
     <div className="space-y-6">
+      {/* Mouse trail effect */}
+      <MouseTrail colors={diceTrailColors} size={8} />
+      
       <h1 className="text-3xl font-bold text-center text-white">Dice</h1>
       <p className="text-center text-gray-400">
         Predict if the dice will roll high (4-6) or low (1-3) and win 1.8x your bet!

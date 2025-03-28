@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GameProvider } from "@/context/GameContext";
 import { TelegramProvider } from "@/context/TelegramContext";
-import { TonConnectUIProvider } from '@tonconnect/ui-react';
 
 import Index from "./pages/Index";
 import CoinflipPage from "./pages/CoinflipPage";
@@ -17,29 +16,24 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// TON Connect manifest URL
-const manifestUrl = `${window.location.origin}/tonconnect-manifest.json`;
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
-      <TonConnectUIProvider manifestUrl={manifestUrl}>
-        <TelegramProvider>
-          <GameProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/coinflip" element={<CoinflipPage />} />
-              <Route path="/dice" element={<DicePage />} />
-              <Route path="/crash" element={<CrashPage />} />
-              <Route path="/leaderboard" element={<LeaderboardPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </GameProvider>
-        </TelegramProvider>
-      </TonConnectUIProvider>
+      <TelegramProvider>
+        <GameProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/coinflip" element={<CoinflipPage />} />
+            <Route path="/dice" element={<DicePage />} />
+            <Route path="/crash" element={<CrashPage />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </GameProvider>
+      </TelegramProvider>
     </BrowserRouter>
   </QueryClientProvider>
 );
