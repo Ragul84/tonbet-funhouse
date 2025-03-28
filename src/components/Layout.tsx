@@ -30,16 +30,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   ];
 
   // Format wallet address for display
-  const formatAddress = (address: string | null) => {
-    if (!address) return "";
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  const formatAddress = () => {
+    return wallet.formattedAddress || "";
   };
 
   // Format balance for display
   const displayBalance = () => {
     if (wallet.connected && wallet.balance) {
-      const balanceNum = Number(wallet.balance) / 1e9;
-      return balanceNum.toFixed(2);
+      return wallet.balance;
     }
     return balance.toFixed(2);
   };
@@ -74,7 +72,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className="flex items-center gap-2">
               <div className="flex items-center space-x-2 neomorphic-wallet px-3 py-2 rounded-full">
                 <Wallet className="h-4 w-4 text-app-purple" />
-                <span className="text-xs font-medium text-white">{formatAddress(wallet.address)}</span>
+                <span className="text-xs font-medium text-white">{formatAddress()}</span>
               </div>
               <Tooltip>
                 <TooltipTrigger asChild>

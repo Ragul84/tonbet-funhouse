@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useTonConnectUI } from "@tonconnect/ui-react";
@@ -51,6 +52,7 @@ interface WalletInfo {
   connected: boolean;
   address: string | null;
   balance: string | null;
+  formattedAddress: string | null; // New field for user-friendly address
 }
 
 interface TelegramContextType {
@@ -72,12 +74,40 @@ export const useTelegramContext = () => {
   return context;
 };
 
+// Function to format wallet address to user-friendly format
+const formatWalletAddress = (address: string | null): string | null => {
+  if (!address) return null;
+  
+  // Check if the address is already in the format we want
+  if (address.startsWith('UQ')) return address;
+  
+  // Simple format: Just show first 6 and last 4 characters
+  return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  
+  // Note: For true conversion to UQ format, you would need to import
+  // the @ton/core package and use Address.parseRaw(address).toString({bounceable: true, urlSafe: true})
+};
+
+// Function to convert nano TON to TON with 2 decimal places
+const formatTONBalance = (balanceNano: string | null): string | null => {
+  if (!balanceNano) return null;
+  
+  try {
+    const balanceTON = Number(balanceNano) / 1e9; // Convert nano TON to TON
+    return balanceTON.toFixed(2); // Format to 2 decimal places
+  } catch (error) {
+    console.error("Error formatting TON balance:", error);
+    return "0.00";
+  }
+};
+
 export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<TelegramUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [wallet, setWallet] = useState<WalletInfo>({
     connected: false,
     address: null,
+    formattedAddress: null,
     balance: null
   });
   
@@ -135,6 +165,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setWallet({
         connected: false,
         address: null,
+        formattedAddress: null,
         balance: null
       });
       console.info("Wallet disconnected");
@@ -158,10 +189,13 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.info("Wallet status changed:", walletInfo ? "connected" : "disconnected");
       
       if (walletInfo) {
-        console.info("Wallet connected:", walletInfo.account.address);
+        const address = walletInfo.account.address;
+        console.info("Wallet connected:", address);
+        
         setWallet({
           connected: true,
-          address: walletInfo.account.address,
+          address: address,
+          formattedAddress: formatWalletAddress(address),
           balance: "Loading..." // We'll fetch the actual balance separately
         });
         
@@ -171,10 +205,12 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             // In a real implementation, we would fetch the actual balance from the TON blockchain
             // For now, we'll use a simulated balance
             const mockBalance = (1 + Math.random() * 9) * 1e9; // Random TON amount between 1-10 TON
-            console.info("Setting mock wallet balance:", mockBalance.toString());
+            const formattedBalance = formatTONBalance(mockBalance.toString());
+            console.info("Setting wallet balance:", formattedBalance);
+            
             setWallet(prev => ({
               ...prev,
-              balance: mockBalance.toString()
+              balance: formattedBalance
             }));
           } catch (error) {
             console.error("Error fetching balance:", error);
@@ -191,6 +227,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setWallet({
           connected: false,
           address: null,
+          formattedAddress: null,
           balance: null
         });
       }
@@ -201,17 +238,20 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.info("Wallet already connected, fetching info");
       const walletInfo = tonConnectUI.wallet;
       if (walletInfo) {
+        const address = walletInfo.account.address;
         setWallet({
           connected: true,
-          address: walletInfo.account.address,
+          address: address,
+          formattedAddress: formatWalletAddress(address),
           balance: "Loading..."
         });
         
         // Simulate balance fetch
         const mockBalance = (1 + Math.random() * 9) * 1e9;
+        const formattedBalance = formatTONBalance(mockBalance.toString());
         setWallet(prev => ({
           ...prev,
-          balance: mockBalance.toString()
+          balance: formattedBalance
         }));
       }
     }
