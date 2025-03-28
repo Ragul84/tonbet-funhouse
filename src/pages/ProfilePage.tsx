@@ -6,6 +6,7 @@ import { useGameContext } from "@/context/GameContext";
 import { CircleDollarSign, Trophy, TrendingUp, BarChart3 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import ProfileIconSelector from "@/components/ProfileIconSelector";
+import ProfileAchievements from "@/components/ProfileAchievements";
 
 const ProfilePage = () => {
   const { user, wallet } = useTelegramContext();
@@ -71,6 +72,8 @@ const ProfilePage = () => {
             </div>
           )}
         </div>
+        
+        <ProfileAchievements />
         
         <ProfileIconSelector />
       </div>
