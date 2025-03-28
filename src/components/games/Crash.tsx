@@ -4,7 +4,7 @@ import { useGameContext } from "@/context/GameContext";
 import BetControls from "@/components/BetControls";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Coins, TimerIcon, ArrowUp, TrendingUp, TrendingDown } from "lucide-react";
+import { Coins, TimerIcon, ArrowUp, TrendingUp, TrendingDown, Rocket } from "lucide-react";
 
 const Crash: React.FC = () => {
   const { placeBet, isLoading, trialPlaysLeft, setCurrentGame } = useGameContext();
@@ -19,6 +19,7 @@ const Crash: React.FC = () => {
   const startTime = useRef<number>(0);
   const graphRef = useRef<HTMLDivElement>(null);
   const curvePointsRef = useRef<{x: number, y: number}[]>([]);
+  const rocketRef = useRef<SVGGElement | null>(null);
   
   // Set current game on mount
   useEffect(() => {
@@ -153,11 +154,31 @@ const Crash: React.FC = () => {
     
     svgPath.setAttribute("d", pathData);
     
-    // Update rocket position (if you want to add a rocket icon on the path)
-    const rocketIcon = document.getElementById("rocket-icon");
-    if (rocketIcon && points.length > 0) {
+    // Update rocket position
+    if (points.length > 0) {
       const lastPoint = points[points.length - 1];
-      rocketIcon.setAttribute("transform", `translate(${lastPoint.x - 12}, ${lastPoint.y - 12})`);
+      
+      // Get the rocket element
+      const rocketIcon = document.getElementById("rocket-icon");
+      if (rocketIcon) {
+        // Update the rocket position
+        rocketIcon.setAttribute("transform", `translate(${lastPoint.x - 10}, ${lastPoint.y - 10})`);
+        
+        // Make sure rocket is visible with proper opacity
+        rocketIcon.setAttribute("opacity", "1");
+        
+        // If crashing, rotate the rocket downward
+        if (isCrashing) {
+          rocketIcon.setAttribute("transform", `translate(${lastPoint.x - 10}, ${lastPoint.y - 10}) rotate(135)`);
+        } else {
+          // Calculate angle based on last two points to point rocket in direction of movement
+          if (points.length > 1) {
+            const prevPoint = points[points.length - 2];
+            const angle = Math.atan2(lastPoint.y - prevPoint.y, lastPoint.x - prevPoint.x) * (180 / Math.PI);
+            rocketIcon.setAttribute("transform", `translate(${lastPoint.x - 10}, ${lastPoint.y - 10}) rotate(${angle})`);
+          }
+        }
+      }
     }
   };
 
@@ -250,18 +271,19 @@ const Crash: React.FC = () => {
               id="crash-path"
               d="M 0,100 L 0,100"
               fill="none"
-              stroke={isCrashing ? "url(#crash-gradient)" : "url(#crash-gradient)"}
+              stroke="url(#crash-gradient)"
               strokeWidth="3"
               strokeLinecap="round"
-              filter={currentMultiplier > 2 ? "url(#glow)" : ""}
+              filter="url(#glow)"
               className={isCrashing ? "animate-pulse" : ""}
             />
+            
             {/* Rocket icon that follows the path */}
-            <g id="rocket-icon">
-              <polygon 
-                points="0,0 4,10 0,8 -4,10" 
+            <g id="rocket-icon" opacity="1" transform="translate(0, 100)">
+              <Rocket 
+                size={20} 
                 fill={currentMultiplier > 2 ? "#D946EF" : "#8B5CF6"} 
-                transform="rotate(45)"
+                strokeWidth={2}
                 className={isRunning ? "animate-pulse" : ""}
               />
             </g>
@@ -285,6 +307,11 @@ const Crash: React.FC = () => {
               <span>2x</span>
               <span>1x</span>
             </div>
+          </div>
+          
+          {/* Initial rocket position */}
+          <div className="absolute bottom-0 left-0 transform -translate-x-1/2">
+            <Rocket size={24} className="text-app-purple" fill="#8B5CF6" />
           </div>
         </div>
         

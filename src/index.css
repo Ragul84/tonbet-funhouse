@@ -133,6 +133,57 @@
       box-shadow: 0 0 20px rgba(220,38,38,0.6);
     }
   }
+  
+  /* Rocket animation */
+  @keyframes rocket-trail {
+    0% {
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+    100% {
+      opacity: 0;
+      stroke-dashoffset: 300;
+    }
+  }
+  
+  .rocket-trail {
+    stroke-dasharray: 50;
+    animation: rocket-trail 2s linear infinite;
+    opacity: 0.7;
+  }
+  
+  /* Rocket glow */
+  @keyframes rocket-glow {
+    0%, 100% {
+      filter: drop-shadow(0 0 3px #8B5CF6);
+    }
+    50% {
+      filter: drop-shadow(0 0 8px #D946EF);
+    }
+  }
+  
+  .rocket-glow {
+    animation: rocket-glow 1.5s ease-in-out infinite;
+  }
+  
+  /* Crash explosion animation */
+  @keyframes crash-explosion {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(3);
+      opacity: 0;
+    }
+  }
+  
+  .crash-explosion {
+    animation: crash-explosion 1s ease-out forwards;
+  }
 
   /* Enhanced realistic coin */
   .realistic-coin {

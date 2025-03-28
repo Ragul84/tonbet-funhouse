@@ -14,7 +14,7 @@ const CrashPage = () => {
 
   return (
     <Layout>
-      <div className="max-w-md mx-auto">
+      <div className="max-w-xl mx-auto"> {/* Increased width for better visibility */}
         <div className="glass-card p-6 mb-6">
           <Crash />
         </div>
