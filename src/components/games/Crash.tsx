@@ -24,6 +24,12 @@ const Crash: React.FC = () => {
   // Set current game on mount
   useEffect(() => {
     setCurrentGame("crash");
+    
+    // Initialize the rocket position at mount
+    setTimeout(() => {
+      initializeRocketPosition();
+    }, 100);
+    
     return () => {
       // This is needed to avoid memory leaks
       if (animationRef.current) {
@@ -31,6 +37,22 @@ const Crash: React.FC = () => {
       }
     };
   }, [setCurrentGame]);
+  
+  // Initialize rocket at the correct starting position
+  const initializeRocketPosition = () => {
+    const rocketIcon = document.getElementById("rocket-icon");
+    const graphWidth = graphRef.current?.clientWidth || 300;
+    const graphHeight = graphRef.current?.clientHeight || 200;
+    
+    // Position the rocket slightly above the 1x position
+    if (rocketIcon) {
+      const initialX = 0; // Start at left edge
+      const initialY = graphHeight - 20; // Just above the bottom
+      
+      rocketIcon.setAttribute("transform", `translate(${initialX}, ${initialY}) rotate(0)`);
+      rocketIcon.setAttribute("opacity", "1");
+    }
+  };
   
   // Handle starting a new game
   const handleStartGame = async () => {
@@ -111,8 +133,8 @@ const Crash: React.FC = () => {
   // Generate points for the crash curve
   const updateCrashPath = (multiplier: number) => {
     // Get the current width of the graph to scale properly
-    const graphWidth = graphRef.current?.clientWidth || 100;
-    const graphHeight = graphRef.current?.clientHeight || 100;
+    const graphWidth = graphRef.current?.clientWidth || 300;
+    const graphHeight = graphRef.current?.clientHeight || 200;
     
     // Calculate a new point based on current multiplier
     const x = Math.min(multiplier, 10) * (graphWidth / 10); // Scale x by graph width
@@ -253,7 +275,7 @@ const Crash: React.FC = () => {
           className="h-48 w-full bg-black/30 rounded-xl mb-6 relative overflow-hidden border border-gray-700/50"
         >
           {/* SVG graph for crash animation */}
-          <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <svg width="100%" height="100%" viewBox="0 0 100% 100%" preserveAspectRatio="none">
             <defs>
               <linearGradient id="crash-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#8B5CF6" />
@@ -269,7 +291,7 @@ const Crash: React.FC = () => {
             </defs>
             <path
               id="crash-path"
-              d="M 0,100 L 0,100"
+              d="M 0,200 L 0,200"
               fill="none"
               stroke="url(#crash-gradient)"
               strokeWidth="3"
@@ -279,12 +301,13 @@ const Crash: React.FC = () => {
             />
             
             {/* Rocket icon that follows the path */}
-            <g id="rocket-icon" opacity="1" transform="translate(0, 100)">
+            <g id="rocket-icon" opacity="1" transform="translate(10, 180)">
               <Rocket 
-                size={20} 
-                fill={currentMultiplier > 2 ? "#D946EF" : "#8B5CF6"} 
+                size={24} 
+                color="#8B5CF6"
+                fill="#D946EF" 
                 strokeWidth={2}
-                className={isRunning ? "animate-pulse" : ""}
+                className="rocket-glow"
               />
             </g>
           </svg>
@@ -307,11 +330,6 @@ const Crash: React.FC = () => {
               <span>2x</span>
               <span>1x</span>
             </div>
-          </div>
-          
-          {/* Initial rocket position */}
-          <div className="absolute bottom-0 left-0 transform -translate-x-1/2">
-            <Rocket size={24} className="text-app-purple" fill="#8B5CF6" />
           </div>
         </div>
         
