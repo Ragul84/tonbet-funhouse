@@ -2,13 +2,16 @@ import { Address } from '@ton/core';
 
 // Import contract addresses (these will be populated after deployment)
 import contractAddresses from '../contracts/addresses.json';
+import randomnessAddresses from '../contracts/randomnessAddress.json';
 
 // Contract address constants
 export const MAINNET_CONTRACT_ADDRESS = contractAddresses.mainnet;
 export const TESTNET_CONTRACT_ADDRESS = contractAddresses.testnet;
+export const MAINNET_RANDOMNESS_ADDRESS = randomnessAddresses.mainnet;
+export const TESTNET_RANDOMNESS_ADDRESS = randomnessAddresses.testnet;
 
-// Use testnet by default for development
-export const USE_TESTNET = true;
+// Use mainnet by default for production deployment
+export const USE_TESTNET = false;
 
 // Game parameters
 export const HOUSE_EDGE_PERCENT = 2; // 2% house edge
@@ -36,6 +39,13 @@ export enum BetStatus {
  */
 export const getContractAddress = (): string => {
   return USE_TESTNET ? TESTNET_CONTRACT_ADDRESS : MAINNET_CONTRACT_ADDRESS;
+};
+
+/**
+ * Gets the appropriate randomness contract address based on network configuration
+ */
+export const getRandomnessAddress = (): string => {
+  return USE_TESTNET ? TESTNET_RANDOMNESS_ADDRESS : MAINNET_RANDOMNESS_ADDRESS;
 };
 
 /**
