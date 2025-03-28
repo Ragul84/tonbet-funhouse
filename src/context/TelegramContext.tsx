@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useTonConnectUI } from "@tonconnect/ui-react";
+import { useTonConnectUI, THEME } from "@tonconnect/ui-react";
 
 declare global {
   interface Window {
@@ -18,6 +18,23 @@ declare global {
           };
         };
         ready: () => void;
+        expand: () => void;
+        MainButton: {
+          text: string;
+          color: string;
+          textColor: string;
+          isVisible: boolean;
+          isActive: boolean;
+          isProgressVisible: boolean;
+          show: () => void;
+          hide: () => void;
+          enable: () => void;
+          disable: () => void;
+          showProgress: (leaveActive: boolean) => void;
+          hideProgress: () => void;
+          onClick: (callback: () => void) => void;
+          offClick: (callback: () => void) => void;
+        };
       };
     };
   }
@@ -65,28 +82,43 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     balance: null
   });
   
-  // Initialize TON Connect
-  const [tonConnectUI] = useTonConnectUI();
+  // Initialize TON Connect with UI components
+  const [tonConnectUI, setOptions] = useTonConnectUI();
+
+  // Configure TON Connect UI
+  useEffect(() => {
+    // Set the theme to match Telegram's color scheme
+    setOptions({
+      theme: THEME.DARK,
+      uiPreferences: {
+        showUIOnConnect: true,
+      },
+    });
+  }, [setOptions]);
 
   // Connect to TON wallet
   const connectWallet = async () => {
     try {
       console.info("Attempting to connect wallet...");
+      
       if (wallet.connected) {
         toast.info("Already connected to wallet");
         return;
       }
       
-      // Ensure we're using the correct TON Connect UI instance
       if (!tonConnectUI) {
         console.error("TonConnectUI is not initialized");
         toast.error("Wallet connection failed. Please try again later.");
         return;
       }
+
+      // Expand the Telegram Web App to ensure full screen for wallet connection
+      if (window.Telegram?.WebApp?.expand) {
+        window.Telegram.WebApp.expand();
+      }
       
       await tonConnectUI.connectWallet();
       console.info("Wallet connection initiated");
-      toast.success("Wallet connected successfully!");
     } catch (error) {
       console.error("Error connecting wallet:", error);
       toast.error("Failed to connect wallet. Please try again.");
@@ -135,19 +167,27 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           balance: "Loading..." // We'll fetch the actual balance separately
         });
         
-        // Fetch wallet balance (this is a simplified example)
-        // In a real app, you would use a TON client library to query the blockchain
-        const simulateBalanceFetch = async () => {
-          // Simulate balance fetch with a more reasonable amount (1-10 TON)
-          const mockBalance = (1 + Math.random() * 9) * 1e9; // Random TON amount between 1-10 TON
-          console.info("Setting mock wallet balance:", mockBalance.toString());
-          setWallet(prev => ({
-            ...prev,
-            balance: mockBalance.toString()
-          }));
+        // Fetch wallet balance
+        const fetchBalance = async () => {
+          try {
+            // In a real implementation, we would fetch the actual balance from the TON blockchain
+            // For now, we'll use a simulated balance
+            const mockBalance = (1 + Math.random() * 9) * 1e9; // Random TON amount between 1-10 TON
+            console.info("Setting mock wallet balance:", mockBalance.toString());
+            setWallet(prev => ({
+              ...prev,
+              balance: mockBalance.toString()
+            }));
+          } catch (error) {
+            console.error("Error fetching balance:", error);
+            setWallet(prev => ({
+              ...prev,
+              balance: "Error"
+            }));
+          }
         };
         
-        simulateBalanceFetch();
+        fetchBalance();
       } else {
         console.info("Wallet disconnected");
         setWallet({
@@ -184,6 +224,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [tonConnectUI]);
 
+  // Update profile image
   const setProfileImage = (imagePath: string) => {
     if (user) {
       setUser({

@@ -20,12 +20,27 @@ import NotFound from "./pages/NotFound";
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
 
-// TON Connect manifest URL - using a valid public URL
+// TON Connect manifest URL - using a valid, secure manifest URL
 const manifestUrl = 'https://ton-connect.github.io/demo-dapp-with-wallet/tonconnect-manifest.json';
+
+// TonConnectUI configuration options
+const tonConnectOptions = {
+  manifestUrl,
+  connectButtonOptions: { 
+    forceUseTelegram: true 
+  },
+  walletsListConfiguration: {
+    includeWallets: [
+      'tonkeeper',
+      'tonhub',
+      'telegram-wallet',
+    ]
+  }
+};
 
 const App = () => (
   <React.StrictMode>
-    <TonConnectUIProvider manifestUrl={manifestUrl}>
+    <TonConnectUIProvider manifestUrl={manifestUrl} connectButtonOptions={tonConnectOptions}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <TelegramProvider>

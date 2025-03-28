@@ -49,6 +49,7 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
   const handleConnectWallet = async () => {
     console.log("Connect wallet button clicked");
     try {
+      // Add special handling here if needed
       await connectWallet();
     } catch (error) {
       console.error("Error in connect wallet handler:", error);
