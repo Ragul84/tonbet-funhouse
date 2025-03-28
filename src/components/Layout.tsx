@@ -32,8 +32,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-800 m-4 py-3 px-4 md:px-6 flex flex-wrap justify-between items-center gap-3 rounded-xl shadow-lg border border-white/10">
-        <Link to="/" className="text-2xl font-bold bg-purple-pink-gradient bg-clip-text text-transparent">
-          TON Casino
+        <Link to="/" className="flex items-center">
+          <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-purple-200 to-purple-400 bg-clip-text text-transparent drop-shadow-sm">
+            TON Casino
+          </span>
+          <span className="ml-1 text-xs px-1.5 py-0.5 bg-purple-600/50 rounded-md text-white font-medium border border-purple-500/40">PRO</span>
         </Link>
         
         <div className="flex flex-wrap items-center gap-3">

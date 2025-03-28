@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useGameContext } from "@/context/GameContext";
 import BetControls from "@/components/BetControls";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Coins, TimerIcon, ArrowUp, TrendingUp, TrendingDown, Rocket } from "lucide-react";
+import confetti from "canvas-confetti";
 
 const Crash: React.FC = () => {
   const { placeBet, isLoading, trialPlaysLeft, setCurrentGame } = useGameContext();
@@ -21,71 +21,51 @@ const Crash: React.FC = () => {
   const curvePointsRef = useRef<{x: number, y: number}[]>([]);
   const rocketRef = useRef<SVGGElement | null>(null);
   
-  // Set current game on mount
   useEffect(() => {
     setCurrentGame("crash");
     
-    // Initialize the rocket position at mount
     setTimeout(() => {
       initializeRocketPosition();
     }, 100);
     
     return () => {
-      // This is needed to avoid memory leaks
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
   }, [setCurrentGame]);
   
-  // Initialize rocket at the correct starting position
   const initializeRocketPosition = () => {
     const rocketIcon = document.getElementById("rocket-icon");
     const graphWidth = graphRef.current?.clientWidth || 300;
     const graphHeight = graphRef.current?.clientHeight || 200;
     
-    // Position the rocket in the proper starting position
     if (rocketIcon) {
-      const initialX = 30; // Starting position just after 1x label
-      const initialY = graphHeight - 20; // Just above the bottom
+      const initialX = 50;
+      const initialY = graphHeight - 30;
       
-      rocketIcon.setAttribute("transform", `translate(${initialX}, ${initialY}) rotate(0)`);
+      rocketIcon.setAttribute("transform", `translate(${initialX}, ${initialY}) rotate(-15)`);
       rocketIcon.setAttribute("opacity", "1");
     }
   };
   
-  // Generate more realistic crash points based on house edge
   const generateCrashPoint = (): number => {
-    // Using a more realistic algorithm for crash points that:
-    // 1. Sometimes crashes very early (1.0x to 1.2x) - about 15-20% of the time
-    // 2. Most often crashes between 1.2x and 3x - about 50% of the time
-    // 3. Sometimes reaches 3x to 8x - about 20% of the time
-    // 4. Rarely reaches above 8x - about 10% of the time
-    // 5. Very rarely reaches very high multipliers (20x+) - about 1% of the time
-    
     const randomValue = Math.random();
     
     if (randomValue < 0.20) {
-      // 20% chance of very early crash (1.0x to 1.2x)
       return 1.0 + (Math.random() * 0.2);
     } else if (randomValue < 0.70) {
-      // 50% chance of crash between 1.2x and 3x
       return 1.2 + (Math.random() * 1.8);
     } else if (randomValue < 0.90) {
-      // 20% chance of crash between 3x and 8x
       return 3.0 + (Math.random() * 5.0);
     } else if (randomValue < 0.99) {
-      // 9% chance of crash between 8x and 20x
       return 8.0 + (Math.random() * 12.0);
     } else {
-      // 1% chance of crash above 20x (up to 100x)
       return 20.0 + (Math.random() * 80.0);
     }
   };
   
-  // Handle starting a new game
   const handleStartGame = async () => {
-    // Reset state
     setCurrentMultiplier(1);
     setHasCrashed(false);
     setIsCrashing(false);
@@ -93,60 +73,49 @@ const Crash: React.FC = () => {
     setCanCashOut(true);
     curvePointsRef.current = [];
     
-    // Generate a crash point using our new algorithm
     crashPoint.current = generateCrashPoint();
     
     console.log("Game started with crash point:", crashPoint.current.toFixed(2) + "x");
     
     startTime.current = Date.now();
     
-    // Start the animation
     animationRef.current = requestAnimationFrame(updateMultiplier);
   };
 
-  // Update the multiplier based on time
   const updateMultiplier = () => {
-    const elapsedTime = (Date.now() - startTime.current) / 1000; // in seconds
+    const elapsedTime = (Date.now() - startTime.current) / 1000;
     
-    // Use a growth function that's faster initially and slows down over time
-    // for more unpredictable and exciting gameplay
-    const growthRate = 0.06 + (Math.random() * 0.02); // Slight randomization in growth rate
+    const growthRate = 0.06 + (Math.random() * 0.02);
     const newMultiplier = Math.pow(Math.E, growthRate * elapsedTime);
     
     setCurrentMultiplier(newMultiplier);
     
-    // Update the animation graph
     if (graphRef.current) {
       updateCrashPath(newMultiplier);
     }
     
-    // Check if crashed
     if (newMultiplier >= crashPoint.current) {
       setIsCrashing(true);
       setHasCrashed(true);
       setCanCashOut(false);
       setIsRunning(false);
       
-      // Flash animation for crash
       if (graphRef.current) {
         graphRef.current.classList.add("crash-flash");
         
-        // Add falling animation
         const crashAnimation = () => {
           const points = [...curvePointsRef.current];
           
-          // Simulate falling curve by adding points that go down
           for (let i = 0; i < 15; i++) {
             const lastPoint = points[points.length - 1];
-            const newY = Math.max(0, lastPoint.y + (i * 3)); // Move down
-            const newX = lastPoint.x + (i * 0.5); // Move slightly right
+            const newY = Math.max(0, lastPoint.y + (i * 3));
+            const newX = lastPoint.x + (i * 0.5);
             points.push({ x: newX, y: newY });
           }
           
           drawCrashPath(points);
         };
         
-        // Run crash animation after a small delay
         setTimeout(crashAnimation, 100);
         
         setTimeout(() => {
@@ -166,31 +135,24 @@ const Crash: React.FC = () => {
     animationRef.current = requestAnimationFrame(updateMultiplier);
   };
 
-  // Generate points for the crash curve
   const updateCrashPath = (multiplier: number) => {
-    // Get the current width of the graph to scale properly
     const graphWidth = graphRef.current?.clientWidth || 300;
     const graphHeight = graphRef.current?.clientHeight || 200;
     
-    // Calculate a new point based on current multiplier
-    const x = Math.min(multiplier, 10) * (graphWidth / 10); // Scale x by graph width
-    const y = graphHeight - (Math.log(multiplier) / Math.log(10)) * (graphHeight * 0.8); // Logarithmic scale for y
+    const x = Math.min(multiplier, 10) * (graphWidth / 10);
+    const y = graphHeight - (Math.log(multiplier) / Math.log(10)) * (graphHeight * 0.8);
     
-    // Add the new point to our curve
     curvePointsRef.current.push({ x, y });
     
-    // Draw the updated path
     drawCrashPath(curvePointsRef.current);
   };
-  
-  // Draw the SVG path for the crash curve
+
   const drawCrashPath = (points: {x: number, y: number}[]) => {
     const svgPath = document.getElementById("crash-path");
     if (!svgPath || points.length === 0) return;
     
     let pathData = `M 0,${points[0].y} `;
     
-    // Use a smoother curve with bezier
     for (let i = 0; i < points.length; i++) {
       if (i === 0) {
         pathData += `L ${points[i].x},${points[i].y} `;
@@ -198,7 +160,6 @@ const Crash: React.FC = () => {
         const prevPoint = points[i-1];
         const currPoint = points[i];
         
-        // Create smoother curve with quadratic bezier
         if (i < points.length - 1) {
           const nextPoint = points[i+1];
           const controlX = (currPoint.x + nextPoint.x) / 2;
@@ -212,44 +173,30 @@ const Crash: React.FC = () => {
     
     svgPath.setAttribute("d", pathData);
     
-    // Update rocket position
     if (points.length > 0) {
       const lastPoint = points[points.length - 1];
       
-      // Get the rocket element
       const rocketIcon = document.getElementById("rocket-icon");
       if (rocketIcon) {
-        // Update the rocket position
         rocketIcon.setAttribute("transform", `translate(${lastPoint.x - 10}, ${lastPoint.y - 10})`);
-        
-        // Make sure rocket is visible with proper opacity
         rocketIcon.setAttribute("opacity", "1");
         
-        // If crashing, rotate the rocket downward
         if (isCrashing) {
           rocketIcon.setAttribute("transform", `translate(${lastPoint.x - 10}, ${lastPoint.y - 10}) rotate(135)`);
         } else {
-          // Calculate angle based on last two points to point rocket in direction of movement
-          if (points.length > 1) {
-            const prevPoint = points[points.length - 2];
-            const angle = Math.atan2(lastPoint.y - prevPoint.y, lastPoint.x - prevPoint.x) * (180 / Math.PI);
-            rocketIcon.setAttribute("transform", `translate(${lastPoint.x - 10}, ${lastPoint.y - 10}) rotate(${angle})`);
-          }
+          const prevPoint = points[points.length - 2];
+          const angle = Math.atan2(lastPoint.y - prevPoint.y, lastPoint.x - prevPoint.x) * (180 / Math.PI);
+          rocketIcon.setAttribute("transform", `translate(${lastPoint.x - 10}, ${lastPoint.y - 10}) rotate(${angle})`);
         }
       }
     }
   };
 
-  // Handle placing a bet - in Crash this starts the game
   const handleBet = async (useTrial: boolean = false) => {
-    // Place bet with target multiplier
     const betResult = await placeBet("crash", targetMultiplier, useTrial);
-    
-    // Start the game animation
     handleStartGame();
   };
 
-  // Handle manual cash out
   const handleCashOut = () => {
     if (!canCashOut || !isRunning) return;
     
@@ -261,13 +208,57 @@ const Crash: React.FC = () => {
       animationRef.current = null;
     }
     
-    // If the player cashed out before the crash point, they win
     const didWin = currentMultiplier < crashPoint.current;
     
     if (didWin) {
-      // This is just UI feedback, the actual win calculation is in the context
+      triggerWinConfetti();
       console.log(`Cashed out at ${currentMultiplier.toFixed(2)}x`);
     }
+  };
+
+  const triggerWinConfetti = () => {
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    
+    const colors = ['#8B5CF6', '#D946EF', '#F97316', '#10B981', '#F59E0B'];
+    
+    const randomInRange = (min: number, max: number) => {
+      return Math.random() * (max - min) + min;
+    };
+    
+    const frame = () => {
+      const timeLeft = animationEnd - Date.now();
+      
+      if (timeLeft <= 0) return;
+      
+      const particleCount = 50 * (timeLeft / duration);
+      
+      confetti({
+        particleCount: Math.floor(randomInRange(10, particleCount)),
+        angle: randomInRange(55, 125),
+        spread: randomInRange(50, 70),
+        origin: { x: randomInRange(0, 0.3), y: randomInRange(0.4, 0.6) },
+        colors: colors,
+        zIndex: 1000,
+        shapes: ['square', 'circle'],
+        disableForReducedMotion: true
+      });
+      
+      confetti({
+        particleCount: Math.floor(randomInRange(10, particleCount)),
+        angle: randomInRange(55, 125),
+        spread: randomInRange(50, 70),
+        origin: { x: randomInRange(0.7, 1), y: randomInRange(0.4, 0.6) },
+        colors: colors,
+        zIndex: 1000,
+        shapes: ['square', 'circle'],
+        disableForReducedMotion: true
+      });
+      
+      requestAnimationFrame(frame);
+    };
+    
+    frame();
   };
 
   return (
@@ -310,7 +301,6 @@ const Crash: React.FC = () => {
           ref={graphRef}
           className="h-48 w-full bg-black/30 rounded-xl mb-6 relative overflow-hidden border border-gray-700/50"
         >
-          {/* SVG graph for crash animation */}
           <svg width="100%" height="100%" viewBox="0 0 100% 100%" preserveAspectRatio="none">
             <defs>
               <linearGradient id="crash-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -336,19 +326,17 @@ const Crash: React.FC = () => {
               className={isCrashing ? "animate-pulse" : ""}
             />
             
-            {/* Rocket icon that follows the path */}
-            <g id="rocket-icon" opacity="1" transform="translate(10, 180)">
+            <g id="rocket-icon" opacity="1" transform="translate(50, 170)">
               <Rocket 
-                size={24} 
-                color="#8B5CF6"
-                fill="#D946EF" 
+                size={30} 
+                color="#D946EF"
+                fill="#8B5CF6" 
                 strokeWidth={2}
                 className="rocket-glow"
               />
             </g>
           </svg>
           
-          {/* Grid lines for better visualization */}
           <div className="absolute inset-0 grid grid-cols-5 grid-rows-4 pointer-events-none">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={`vline-${i}`} className="h-full w-px bg-gray-700/30" style={{ left: `${(i + 1) * 20}%` }} />
@@ -358,7 +346,6 @@ const Crash: React.FC = () => {
             ))}
           </div>
           
-          {/* Multiplier markers */}
           <div className="absolute inset-0 flex justify-between px-4 text-xs text-gray-500">
             <div className="h-full flex flex-col justify-between py-2">
               <span>10x</span>
@@ -410,7 +397,6 @@ const Crash: React.FC = () => {
           </Button>
         ) : (
           <>
-            {/* Trial mode button */}
             {trialPlaysLeft > 0 && (
               <div className="flex justify-center mb-4">
                 <Button 

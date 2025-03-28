@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import BetHistory from "@/components/BetHistory";
-import { CircleDollarSign, Trophy, Users, BarChart3 } from "lucide-react";
+import { CircleDollarSign, Trophy, Users, BarChart3, Sparkles } from "lucide-react";
 import { useGameContext } from "@/context/GameContext";
 import { useTelegramContext } from "@/context/TelegramContext";
 
@@ -51,13 +51,15 @@ const Index = () => {
     <Layout>
       <div className="space-y-8">
         <div className="text-center space-y-3">
-          <h1 className="text-4xl font-bold text-white">TON Casino</h1>
+          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-purple-400 bg-clip-text text-transparent drop-shadow-sm">
+            TON Casino
+          </h1>
           <p className="text-gray-400 max-w-md mx-auto">
             Play exciting games, bet TON, and win up to 1.8x your bet!
           </p>
           {user && (
             <p className="text-sm text-gray-400">
-              Welcome, @{user.username}!
+              Welcome, <span className="text-app-purple font-semibold">@{user.username}!</span>
             </p>
           )}
         </div>
@@ -115,9 +117,9 @@ const Index = () => {
 
         <div className="glass-card p-6 text-center bg-gradient-radial">
           <div className="inline-block bg-black/40 p-3 rounded-full mb-4">
-            <CircleDollarSign size={36} className="text-ton" />
+            <Sparkles size={36} className="text-yellow-400" />
           </div>
-          <h2 className="text-xl font-bold mb-2">Stake TON to Win</h2>
+          <h2 className="text-xl font-bold mb-2 bg-gradient-to-r from-yellow-300 to-yellow-500 bg-clip-text text-transparent">Stake TON to Win</h2>
           <p className="text-gray-400">
             Play games with your TON coins and win instant rewards!
           </p>
