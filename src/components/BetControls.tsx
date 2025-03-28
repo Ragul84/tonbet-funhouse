@@ -39,12 +39,17 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
     }
   };
 
+  const handleConnectWallet = async () => {
+    console.log("Connecting wallet from BetControls...");
+    await connectWallet();
+  };
+
   if (!wallet.connected) {
     return (
       <div className="glass-card p-6 text-center">
         <p className="text-gray-400 mb-4">Connect your TON wallet to place bets</p>
         <Button 
-          onClick={connectWallet} 
+          onClick={handleConnectWallet} 
           className="bg-app-purple hover:bg-app-purple/90 w-full"
         >
           <Wallet className="mr-2 h-5 w-5" />
