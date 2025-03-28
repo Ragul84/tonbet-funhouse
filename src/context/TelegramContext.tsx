@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { checkWalletAvailability } from "@/utils/walletUtils";
@@ -98,10 +99,13 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const walletConnection = tonConnectUI.account;
       
       if (walletConnection) {
+        // Fix: Get the balance as a string from the account
+        // The tonConnectUI doesn't provide balance directly in the account object
+        // We need to format it as a string
         setWallet({
           connected: true,
           address: walletConnection.address,
-          balance: walletConnection.balance || "0"
+          balance: walletConnection.balance?.toString() || "0"
         });
         toast.success("Wallet connected successfully!");
       } else {
