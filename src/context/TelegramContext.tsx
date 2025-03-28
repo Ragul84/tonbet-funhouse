@@ -169,8 +169,8 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         
         const fetchBalance = async () => {
           try {
-            const mockBalance = (1 + Math.random() * 9);
-            const formattedBalance = formatTonBalance(mockBalance);
+            const fixedBalance = 30.90;
+            const formattedBalance = formatTonBalance(fixedBalance);
             console.info("Setting wallet balance:", formattedBalance);
             
             setWallet(prev => ({
@@ -215,8 +215,8 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           balance: "Loading..."
         });
         
-        const mockBalance = (1 + Math.random() * 9);
-        const formattedBalance = formatTonBalance(mockBalance);
+        const fixedBalance = 30.90;
+        const formattedBalance = formatTonBalance(fixedBalance);
         setWallet(prev => ({
           ...prev,
           balance: formattedBalance
