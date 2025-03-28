@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,9 +34,7 @@
 
     --radius: 0.5rem;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -96,6 +93,14 @@
                 -5px -5px 10px #202839;
   }
   
+  .neomorphic-card {
+    background: linear-gradient(145deg, #1c2030, #17192b);
+    box-shadow: 8px 8px 16px #14161f, 
+                -8px -8px 16px #202839;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+  }
+  
   .neo-dice {
     background: linear-gradient(145deg, #1c2030, #17192b);
     box-shadow: 8px 8px 16px #14161f, 
@@ -114,6 +119,20 @@
     @apply px-4 py-2 rounded-lg font-medium transition-all duration-300;
   }
   
+  /* Crash game specific styles */
+  .crash-flash {
+    animation: crash-flash 0.5s ease-in-out 3;
+  }
+  
+  @keyframes crash-flash {
+    0%, 100% {
+      background-color: rgba(0,0,0,0.3);
+    }
+    50% {
+      background-color: rgba(220,38,38,0.3);
+    }
+  }
+
   /* Enhanced realistic coin */
   .realistic-coin {
     width: 150px;
@@ -304,10 +323,6 @@
     transform: scale(1.05) rotateX(540deg) rotateY(270deg);
   }
   90% {
-    opacity: 0.8;
-    transform: scale(1) rotateX(720deg) rotateY(360deg);
-  }
-  100% {
     opacity: 0;
   }
 }
