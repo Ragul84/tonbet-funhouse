@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import BetHistory from "@/components/BetHistory";
-import { CircleDollarSign, Trophy } from "lucide-react";
+import { CircleDollarSign, Trophy, Users, BarChart3 } from "lucide-react";
 import { useGameContext } from "@/context/GameContext";
 import { useTelegramContext } from "@/context/TelegramContext";
 
@@ -31,15 +31,27 @@ const games = [
   },
 ];
 
+// Global statistics
+const globalStats = {
+  activeUsers: "60K+",
+  betsPlaced: "1.1M+",
+  totalPayout: "890K+",
+};
+
 const Index = () => {
-  const { currentUserStats } = useGameContext();
+  const { currentUserStats, setCurrentGame } = useGameContext();
   const { user } = useTelegramContext();
+
+  // Reset current game on home page
+  React.useEffect(() => {
+    setCurrentGame(null);
+  }, [setCurrentGame]);
 
   return (
     <Layout>
       <div className="space-y-8">
         <div className="text-center space-y-3">
-          <h1 className="text-4xl font-bold text-white">TON Bet</h1>
+          <h1 className="text-4xl font-bold text-white">TON Casino</h1>
           <p className="text-gray-400 max-w-md mx-auto">
             Play exciting games, bet TON, and win up to 1.8x your bet!
           </p>
@@ -48,6 +60,39 @@ const Index = () => {
               Welcome, @{user.username}!
             </p>
           )}
+        </div>
+
+        {/* Global Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="neomorphic-stat p-4 rounded-xl flex items-center">
+            <div className="rounded-full bg-app-purple/20 p-2 mr-3">
+              <Users className="h-6 w-6 text-app-purple" />
+            </div>
+            <div>
+              <p className="text-gray-400 text-sm">Active Users</p>
+              <p className="text-white font-bold text-xl">{globalStats.activeUsers}</p>
+            </div>
+          </div>
+          
+          <div className="neomorphic-stat p-4 rounded-xl flex items-center">
+            <div className="rounded-full bg-app-pink/20 p-2 mr-3">
+              <BarChart3 className="h-6 w-6 text-app-pink" />
+            </div>
+            <div>
+              <p className="text-gray-400 text-sm">Bets Placed</p>
+              <p className="text-white font-bold text-xl">{globalStats.betsPlaced}</p>
+            </div>
+          </div>
+          
+          <div className="neomorphic-stat p-4 rounded-xl flex items-center">
+            <div className="rounded-full bg-ton/20 p-2 mr-3">
+              <CircleDollarSign className="h-6 w-6 text-ton" />
+            </div>
+            <div>
+              <p className="text-gray-400 text-sm">TON Paid Out</p>
+              <p className="text-white font-bold text-xl">{globalStats.totalPayout}</p>
+            </div>
+          </div>
         </div>
 
         {currentUserStats && (

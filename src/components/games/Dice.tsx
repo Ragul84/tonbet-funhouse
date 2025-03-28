@@ -1,16 +1,21 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useGameContext } from "@/context/GameContext";
 import BetControls from "@/components/BetControls";
 import { Button } from "@/components/ui/button";
 import { Coins, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from "lucide-react";
 
 const Dice: React.FC = () => {
-  const { placeBet, isLoading, trialPlaysLeft } = useGameContext();
+  const { placeBet, isLoading, trialPlaysLeft, setCurrentGame } = useGameContext();
   const [prediction, setPrediction] = useState<"low" | "high">("high");
   const [result, setResult] = useState<number | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const diceContainerRef = useRef<HTMLDivElement>(null);
+
+  // Set current game on mount
+  useEffect(() => {
+    setCurrentGame("dice");
+  }, [setCurrentGame]);
 
   const handleRoll = async (useTrial: boolean = false) => {
     setIsRolling(true);

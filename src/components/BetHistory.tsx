@@ -4,17 +4,24 @@ import { useGameContext } from "@/context/GameContext";
 import { format } from "date-fns";
 
 const BetHistory: React.FC = () => {
-  const { bets } = useGameContext();
+  const { bets, currentGame } = useGameContext();
+  
+  // Filter bets by the current game
+  const filteredBets = currentGame 
+    ? bets.filter(bet => bet.game === currentGame)
+    : bets;
 
-  if (bets.length === 0) {
+  if (filteredBets.length === 0) {
     return null;
   }
 
   return (
     <div className="glass-card p-4">
-      <h3 className="text-lg font-medium mb-4">Bet History</h3>
+      <h3 className="text-lg font-medium mb-4">
+        {currentGame ? `${currentGame.charAt(0).toUpperCase() + currentGame.slice(1)} History` : "Bet History"}
+      </h3>
       <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
-        {bets.map((bet) => (
+        {filteredBets.map((bet) => (
           <div 
             key={bet.id} 
             className={`flex justify-between items-center p-3 rounded-lg ${
@@ -23,7 +30,7 @@ const BetHistory: React.FC = () => {
           >
             <div>
               <div className="font-medium capitalize">
-                {bet.game}
+                {bet.game} {bet.isTrial && "(Trial)"}
               </div>
               <div className="text-xs text-gray-400">
                 {format(new Date(bet.timestamp), "HH:mm:ss")}

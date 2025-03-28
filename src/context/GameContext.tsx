@@ -38,6 +38,8 @@ interface GameContextType {
   currentUserStats: UserStats | null;
   trialPlaysLeft: number;
   setTrialPlaysLeft: React.Dispatch<React.SetStateAction<number>>;
+  currentGame: GameType | null;
+  setCurrentGame: React.Dispatch<React.SetStateAction<GameType | null>>;
 }
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -57,6 +59,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(false);
   const [userStats, setUserStats] = useState<UserStats[]>([]);
   const [trialPlaysLeft, setTrialPlaysLeft] = useState(2); // Each user gets 2 free trial plays
+  const [currentGame, setCurrentGame] = useState<GameType | null>(null);
   const { user, wallet } = useTelegramContext();
 
   // Current user stats
@@ -188,27 +191,30 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let winAmount = 0;
     const platformFee = isTrial ? 0 : betAmount * 0.002; // No fee for trial plays
 
+    // Set different win rates for trial vs. real bets
+    const winRate = isTrial ? 0.8 : 0.4; // 80% for trial, 40% for real bets
+
     // Different game logic with adjusted win rates
     switch (game) {
       case "coinflip":
-        // 40% chance to win
-        isWin = generateOutcome(0.4) && prediction === (Math.random() < 0.5 ? "heads" : "tails");
+        // 80% for trial, 40% for real bets
+        isWin = generateOutcome(winRate) && prediction === (Math.random() < 0.5 ? "heads" : "tails");
         break;
       case "dice":
         const diceResult = Math.floor(Math.random() * 6) + 1;
         if (prediction === "high") {
-          // 40% chance to win for high prediction (4-6)
-          isWin = diceResult > 3 && generateOutcome(0.4);
+          // Higher chance to win for high prediction (4-6)
+          isWin = diceResult > 3 && generateOutcome(winRate);
         } else {
-          // 40% chance to win for low prediction (1-3)
-          isWin = diceResult <= 3 && generateOutcome(0.4);
+          // Higher chance to win for low prediction (1-3)
+          isWin = diceResult <= 3 && generateOutcome(winRate);
         }
         break;
       case "crash":
         // For crash, prediction is the cash-out multiplier
         const crashPoint = (0.9 + Math.random() * 9).toFixed(2);
-        // Adjust crash win rate to match the 40% target
-        isWin = Number(crashPoint) > prediction && generateOutcome(0.4);
+        // Adjust crash win rate
+        isWin = Number(crashPoint) > prediction && generateOutcome(winRate);
         break;
     }
 
@@ -270,7 +276,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         userStats,
         currentUserStats,
         trialPlaysLeft,
-        setTrialPlaysLeft
+        setTrialPlaysLeft,
+        currentGame,
+        setCurrentGame
       }}
     >
       {children}

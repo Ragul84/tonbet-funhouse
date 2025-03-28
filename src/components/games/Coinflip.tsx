@@ -6,12 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Coins } from "lucide-react";
 
 const Coinflip: React.FC = () => {
-  const { placeBet, isLoading, trialPlaysLeft } = useGameContext();
+  const { placeBet, isLoading, trialPlaysLeft, setCurrentGame } = useGameContext();
   const [prediction, setPrediction] = useState<"heads" | "tails">("heads");
   const [isFlipping, setIsFlipping] = useState(false);
   const [result, setResult] = useState<"heads" | "tails" | null>(null);
   const [isTrial, setIsTrial] = useState(false);
   const coinRef = useRef<HTMLDivElement>(null);
+
+  // Set current game on mount
+  useEffect(() => {
+    setCurrentGame("coinflip");
+    
+    return () => {
+      if (coinRef.current) {
+        coinRef.current.classList.remove("animate-coin-flip");
+      }
+    };
+  }, [setCurrentGame]);
 
   const handleBet = async (useTrial: boolean = false) => {
     setIsFlipping(true);
@@ -38,15 +49,6 @@ const Coinflip: React.FC = () => {
       }
     }, 1500);
   };
-
-  // Reset animation when done
-  useEffect(() => {
-    return () => {
-      if (coinRef.current) {
-        coinRef.current.classList.remove("animate-coin-flip");
-      }
-    };
-  }, []);
 
   return (
     <div className="space-y-6">

@@ -4,9 +4,10 @@ import { useGameContext } from "@/context/GameContext";
 import BetControls from "@/components/BetControls";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Coins } from "lucide-react";
 
 const Crash: React.FC = () => {
-  const { placeBet, isLoading } = useGameContext();
+  const { placeBet, isLoading, trialPlaysLeft, setCurrentGame } = useGameContext();
   const [targetMultiplier, setTargetMultiplier] = useState(1.5);
   const [currentMultiplier, setCurrentMultiplier] = useState(1);
   const [isCrashing, setIsCrashing] = useState(false);
@@ -16,6 +17,17 @@ const Crash: React.FC = () => {
   const animationRef = useRef<number | null>(null);
   const crashPoint = useRef(2);
   const startTime = useRef<number>(0);
+  
+  // Set current game on mount
+  useEffect(() => {
+    setCurrentGame("crash");
+    return () => {
+      // This is needed to avoid memory leaks
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [setCurrentGame]);
   
   // Handle starting a new game
   const handleStartGame = async () => {
@@ -58,9 +70,9 @@ const Crash: React.FC = () => {
   };
 
   // Handle placing a bet - in Crash this starts the game
-  const handleBet = async () => {
+  const handleBet = async (useTrial: boolean = false) => {
     // Place bet with target multiplier
-    const betResult = await placeBet("crash", targetMultiplier);
+    const betResult = await placeBet("crash", targetMultiplier, useTrial);
     
     // Start the game animation
     handleStartGame();
@@ -86,15 +98,6 @@ const Crash: React.FC = () => {
       console.log(`Cashed out at ${currentMultiplier.toFixed(2)}x`);
     }
   };
-
-  // Cleanup animation on unmount
-  useEffect(() => {
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -156,7 +159,23 @@ const Crash: React.FC = () => {
             Cash Out Now ({currentMultiplier.toFixed(2)}x)
           </Button>
         ) : (
-          <BetControls onBet={handleBet} disabled={isRunning} />
+          <>
+            {/* Trial mode button */}
+            {trialPlaysLeft > 0 && (
+              <div className="flex justify-center mb-4">
+                <Button 
+                  onClick={() => handleBet(true)}
+                  variant="outline"
+                  className="w-full max-w-xs bg-gray-800/50 border border-app-purple/30 text-white hover:bg-app-purple/20"
+                  disabled={isLoading || isRunning}
+                >
+                  <Coins className="mr-2 h-4 w-4" />
+                  Try for Free ({trialPlaysLeft} left)
+                </Button>
+              </div>
+            )}
+            <BetControls onBet={() => handleBet(false)} disabled={isRunning} />
+          </>
         )}
       </div>
     </div>
