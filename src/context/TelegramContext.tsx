@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useTonConnectUI, THEME } from "@tonconnect/ui-react";
@@ -91,7 +90,6 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setOptions({
       theme: THEME.DARK,
       uiPreferences: {
-        showUIOnConnect: true,
       },
     });
   }, [setOptions]);
