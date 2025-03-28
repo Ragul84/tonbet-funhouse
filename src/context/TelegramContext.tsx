@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { checkWalletAvailability, connectToTonkeeper } from "@/utils/walletUtils";
+import { checkWalletAvailability } from "@/utils/walletUtils";
+import { useTonConnectUI } from '@tonconnect/ui-react';
 
 declare global {
   interface Window {
@@ -90,10 +91,53 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     address: null,
     balance: null
   });
+  const [tonConnectUI] = useTonConnectUI();
+
+  useEffect(() => {
+    const walletChangeHandler = () => {
+      const walletConnection = tonConnectUI.account;
+      
+      if (walletConnection) {
+        setWallet({
+          connected: true,
+          address: walletConnection.address,
+          balance: walletConnection.balance || "0"
+        });
+        toast.success("Wallet connected successfully!");
+      } else {
+        setWallet({
+          connected: false,
+          address: null,
+          balance: null
+        });
+      }
+    };
+
+    walletChangeHandler();
+    
+    const unsubscribe = tonConnectUI.onStatusChange(walletChangeHandler);
+    
+    return () => {
+      unsubscribe();
+    };
+  }, [tonConnectUI]);
 
   const connectWallet = async () => {
     try {
-      console.log("Starting wallet connection attempt...");
+      console.log("Starting TON Connect wallet connection...");
+      
+      if (tonConnectUI) {
+        toast.info("Connecting to TON wallet...");
+        
+        try {
+          await tonConnectUI.connectWallet();
+          console.log("TON Connect wallet connection initiated");
+          return;
+        } catch (error) {
+          console.error("TON Connect error:", error);
+        }
+      }
+      
       const availability = checkWalletAvailability();
       console.log("Wallet availability check:", availability);
       
@@ -119,7 +163,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.log("Tonkeeper detected, attempting to connect");
         
         try {
-          const result = await connectToTonkeeper();
+          const result = await window.tonkeeper.connect();
           
           if (result && result.address) {
             let balance = "0";
@@ -193,15 +237,10 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
       
-      if (!availability.tonkeeper.available && 
+      if (!tonConnectUI && 
+          !availability.tonkeeper.available && 
           !availability.TON.available && 
           !availability.TonConnect.available) {
-        console.log("No compatible wallet found. Available globals:", {
-          tonkeeper: !!window.tonkeeper,
-          TON: !!window.TON,
-          TonConnect: !!window.TonConnect
-        });
-        
         toast.error("No compatible TON wallet detected. Please install Tonkeeper extension or another TON wallet.");
         console.warn("No compatible TON wallet detected. Please ensure Tonkeeper or another TON wallet extension is installed.");
       } else {
@@ -223,20 +262,6 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       toast.success("Profile image updated successfully!");
     }
   };
-
-  useEffect(() => {
-    if (window.TON) {
-      window.TON.on('accountsChanged', (accounts: string[]) => {
-        if (accounts.length === 0) {
-          setWallet({
-            connected: false,
-            address: null,
-            balance: null
-          });
-        }
-      });
-    }
-  }, []);
 
   useEffect(() => {
     const initializeTelegram = () => {

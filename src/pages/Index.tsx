@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -25,8 +24,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTonConnectUI } from '@tonconnect/ui-react';
 
-const GameCard = ({ 
+const GameCard = ({
   title, 
   description, 
   icon: Icon, 
@@ -60,8 +60,19 @@ const Index: React.FC = () => {
   const { wallet, connectWallet } = useTelegramContext();
   const [connecting, setConnecting] = useState(false);
   const [showWalletInfo, setShowWalletInfo] = useState(false);
+  const [tonConnectUI] = useTonConnectUI();
   
   const handleConnectWallet = async () => {
+    if (tonConnectUI) {
+      setConnecting(true);
+      try {
+        await connectWallet();
+      } finally {
+        setConnecting(false);
+      }
+      return;
+    }
+    
     const availability = checkWalletAvailability();
     console.log("Wallet availability check:", availability);
     
