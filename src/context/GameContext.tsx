@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useTelegramContext } from "./TelegramContext";
@@ -144,9 +145,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return false;
         }
 
-        const availableBalance = Number(wallet.balance)/1e9;
+        // Convert wallet balance to number if it's a string
+        const walletBalanceNumber = typeof wallet.balance === 'string' 
+          ? parseFloat(wallet.balance)
+          : wallet.balance;
         
-        if (betAmount > availableBalance) {
+        if (betAmount > walletBalanceNumber) {
           toast.error("Insufficient wallet balance");
           return false;
         }
