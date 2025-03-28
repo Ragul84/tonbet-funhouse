@@ -74,8 +74,14 @@ export const isValidTonAddress = (address: string): boolean => {
 
 /**
  * Encodes the game type and prediction for a contract call
+ * Returns an encoded string representation for the contract
  */
-export const encodeGameData = (gameType: number | string, prediction: any): string => {
+export interface EncodedGameData {
+  gameType: number;
+  prediction: number;
+}
+
+export const encodeGameData = (gameType: number | string, prediction: any): EncodedGameData => {
   const gameCode = typeof gameType === 'string' ? 
     gameType === 'coinflip' ? 1 : gameType === 'dice' ? 2 : 3 :
     gameType;
