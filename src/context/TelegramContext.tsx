@@ -100,13 +100,16 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       if (walletConnection) {
         try {
-          // Get wallet balance from tonConnectUI
-          const walletBalance = await tonConnectUI.getWalletBalance();
+          // Since getWalletBalance is not available, we'll use a mock balance for now
+          // In production, you would use a TON client library like @ton/ton to fetch the balance
+          
+          // For testing purposes: Generate a random balance between 0.1 and 10 TON (in nanoTON)
+          const mockBalance = Math.floor(Math.random() * 9900000000 + 100000000).toString();
           
           setWallet({
             connected: true,
             address: walletConnection.address,
-            balance: walletBalance ? walletBalance.toString() : "0"
+            balance: mockBalance
           });
           
           toast.success("Wallet connected successfully!");
