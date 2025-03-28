@@ -1,4 +1,3 @@
-
 /**
  * TON Address formatter utilities for browser environments.
  * Provides formatting functions for TON addresses without requiring Node.js Buffer.
@@ -26,9 +25,8 @@ export const formatTonAddress = (address: string | null): string | null => {
         const workchain = parts[0];
         const hexPart = parts[1];
         
-        // Use a more visually distinct format (UQ... style)
-        // This is a simplified version since we can't use the actual TON SDK in browser
-        return `UQ${hexPart.slice(0, 6)}...${hexPart.slice(-4)}`;
+        // Use a more visually distinct format with shorter display (3 chars...2 chars)
+        return `UQ${hexPart.slice(0, 3)}...${hexPart.slice(-2)}`;
       }
     }
     
