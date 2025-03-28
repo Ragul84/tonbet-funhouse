@@ -6,6 +6,7 @@ import { useGameContext } from "@/context/GameContext";
 import { useTelegramContext } from "@/context/TelegramContext";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { balance } = useGameContext();
@@ -30,15 +31,24 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="neomorphic-header m-4 py-3 px-4 md:px-6 flex flex-wrap justify-between items-center gap-3 rounded-xl">
+      <header className="bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-800 m-4 py-3 px-4 md:px-6 flex flex-wrap justify-between items-center gap-3 rounded-xl shadow-lg border border-white/10">
         <Link to="/" className="text-2xl font-bold bg-purple-pink-gradient bg-clip-text text-transparent">
-          TON Bet
+          TON Casino
         </Link>
         
         <div className="flex flex-wrap items-center gap-3">
           {user && (
-            <div className="text-sm text-white/80">
-              @{user.username}
+            <div className="flex items-center space-x-2 bg-white/5 backdrop-blur-sm px-3 py-2 rounded-full border border-white/10">
+              <Avatar className="h-8 w-8 ring-2 ring-app-purple/30">
+                {user.profileImage ? (
+                  <AvatarImage src={user.profileImage} alt={user.username} />
+                ) : (
+                  <AvatarFallback className="bg-app-purple/20 text-white">
+                    {user.username.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <span className="text-sm font-medium text-white">@{user.username}</span>
             </div>
           )}
           

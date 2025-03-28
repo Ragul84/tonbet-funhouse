@@ -36,6 +36,7 @@ interface TelegramUser {
   username: string;
   firstName: string;
   lastName?: string;
+  profileImage?: string;
 }
 
 interface WalletInfo {
@@ -49,6 +50,7 @@ interface TelegramContextType {
   isLoading: boolean;
   wallet: WalletInfo;
   connectWallet: () => Promise<void>;
+  setProfileImage: (imagePath: string) => void;
 }
 
 const TelegramContext = createContext<TelegramContextType | null>(null);
@@ -97,6 +99,17 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const setProfileImage = (imagePath: string) => {
+    if (user) {
+      setUser({
+        ...user,
+        profileImage: imagePath
+      });
+      localStorage.setItem('userProfileImage', imagePath);
+      toast.success("Profile image updated successfully!");
+    }
+  };
+
   // Listen for wallet changes
   useEffect(() => {
     if (window.TON) {
@@ -128,7 +141,8 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               id: userData.id,
               username: userData.username || `user${userData.id}`,
               firstName: userData.first_name,
-              lastName: userData.last_name
+              lastName: userData.last_name,
+              profileImage: localStorage.getItem('userProfileImage') || undefined
             });
           } else {
             // For development/testing when not in Telegram
@@ -137,7 +151,8 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               id: 123456789,
               username: "testuser",
               firstName: "Test",
-              lastName: "User"
+              lastName: "User",
+              profileImage: localStorage.getItem('userProfileImage') || undefined
             });
           }
         } else {
@@ -147,7 +162,8 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             id: 123456789,
             username: "testuser",
             firstName: "Test",
-            lastName: "User"
+            lastName: "User",
+            profileImage: localStorage.getItem('userProfileImage') || undefined
           });
         }
       } catch (error) {
@@ -161,7 +177,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   return (
-    <TelegramContext.Provider value={{ user, isLoading, wallet, connectWallet }}>
+    <TelegramContext.Provider value={{ user, isLoading, wallet, connectWallet, setProfileImage }}>
       {children}
     </TelegramContext.Provider>
   );

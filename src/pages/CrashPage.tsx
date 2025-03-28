@@ -19,7 +19,7 @@ const CrashPage = () => {
           <Crash />
         </div>
         <div className="mt-6">
-          <BetHistory />
+          <BetHistory gameType="crash" />
         </div>
       </div>
     </Layout>
