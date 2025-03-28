@@ -1,4 +1,3 @@
-
 import { Address, Cell, beginCell } from "@ton/core";
 import fs from "fs";
 import { compile } from "@ton/blueprint";
