@@ -14,7 +14,7 @@ const ProfilePage = () => {
 
   // Calculate total bets placed
   const totalBets = bets?.length || 0;
-  const totalWins = bets?.filter(bet => bet.win).length || 0;
+  const totalWins = bets?.filter(bet => bet.outcome === "win").length || 0;
   const winRate = totalBets > 0 ? Math.round((totalWins / totalBets) * 100) : 0;
 
   // Simulate recent activity
@@ -154,14 +154,14 @@ const ProfilePage = () => {
                     {recentActivity.map((bet, index) => (
                       <div key={index} className="glass-card p-3 flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className={`w-2 h-2 rounded-full ${bet.win ? "bg-green-500" : "bg-red-500"}`}></div>
+                          <div className={`w-2 h-2 rounded-full ${bet.outcome === "win" ? "bg-green-500" : "bg-red-500"}`}></div>
                           <div>
                             <h3 className="font-medium">{bet.game}</h3>
                             <p className="text-xs text-gray-400">{new Date(bet.timestamp).toLocaleString()}</p>
                           </div>
                         </div>
-                        <div className={`font-medium ${bet.win ? "text-green-500" : "text-red-500"}`}>
-                          {bet.win ? "+" : "-"}{bet.amount.toFixed(2)} TON
+                        <div className={`font-medium ${bet.outcome === "win" ? "text-green-500" : "text-red-500"}`}>
+                          {bet.outcome === "win" ? "+" : "-"}{bet.amount.toFixed(2)} TON
                         </div>
                       </div>
                     ))}

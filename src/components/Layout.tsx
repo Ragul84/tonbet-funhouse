@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { CircleDollarSign, Trophy, Home, Coins, Dice, TrendingUp, User } from "lucide-react";
+import { CircleDollarSign, Trophy, Home, Coins, Dice1, TrendingUp, User } from "lucide-react";
 import { useGameContext } from "@/context/GameContext";
 import { useTelegramContext } from "@/context/TelegramContext";
 
@@ -13,7 +13,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigation = [
     { name: "Home", path: "/", icon: Home },
     { name: "Coinflip", path: "/coinflip", icon: Coins },
-    { name: "Dice", path: "/dice", icon: Dice },
+    { name: "Dice", path: "/dice", icon: Dice1 },
     { name: "Crash", path: "/crash", icon: TrendingUp },
     { name: "Leaderboard", path: "/leaderboard", icon: Trophy },
     { name: "Profile", path: "/profile", icon: User },
