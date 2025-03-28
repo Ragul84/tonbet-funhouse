@@ -1,3 +1,4 @@
+
 /**
  * TON Address formatter utilities for browser environments.
  * Provides formatting functions for TON addresses without requiring Node.js Buffer.
@@ -45,11 +46,17 @@ export const formatTonAddress = (address: string | null): string | null => {
  * @param balanceNano Balance in nano TON (1 TON = 1e9 nano TON)
  * @returns Balance in TON as a string with 2 decimal places
  */
-export const formatTonBalance = (balanceNano: string | null): string | null => {
-  if (!balanceNano) return null;
+export const formatTonBalance = (balanceNano: string | number | null): string => {
+  if (balanceNano === null || balanceNano === undefined) return "0.00";
   
   try {
-    const balanceTON = Number(balanceNano) / 1e9; // Convert nano TON to TON
+    // If the balance is already in TON format, just format it
+    if (typeof balanceNano === 'number' && balanceNano < 1000000) {
+      return balanceNano.toFixed(2);
+    }
+    
+    // Convert from nano TON to TON
+    const balanceTON = Number(balanceNano) / 1e9;
     return balanceTON.toFixed(2); // Format to 2 decimal places
   } catch (error) {
     console.error("Error formatting TON balance:", error);

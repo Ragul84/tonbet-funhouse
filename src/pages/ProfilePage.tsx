@@ -32,6 +32,9 @@ const ProfilePage = () => {
               <div className="neomorphic-wallet px-4 py-2 rounded-full mb-4">
                 <p className="text-sm text-gray-400">Wallet</p>
                 <p className="font-medium text-white text-sm">{wallet.formattedAddress}</p>
+                {wallet.balance && (
+                  <p className="text-xs text-green-400 mt-1">Balance: {wallet.balance} TON</p>
+                )}
               </div>
             ) : (
               <p className="text-gray-400 mb-4">No wallet connected</p>

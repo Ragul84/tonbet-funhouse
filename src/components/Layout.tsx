@@ -31,7 +31,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   // Format wallet address for display
   const formatAddress = () => {
-    // Ensure we use the properly formatted address (should be in UQ... format now)
     if (wallet.formattedAddress) {
       console.log("Using formatted address:", wallet.formattedAddress);
       return wallet.formattedAddress;
@@ -42,6 +41,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Format balance for display
   const displayBalance = () => {
     if (wallet.connected && wallet.balance) {
+      // Ensure wallet balance is properly displayed
       return wallet.balance;
     }
     return balance.toFixed(2);
