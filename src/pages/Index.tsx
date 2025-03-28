@@ -49,7 +49,7 @@ const globalStats = {
 
 const Index = () => {
   const { currentUserStats, setCurrentGame } = useGameContext();
-  const { user } = useTelegramContext();
+  const { user, wallet } = useTelegramContext();
 
   // Reset current game on home page
   React.useEffect(() => {
@@ -80,6 +80,9 @@ const Index = () => {
             <div className="neomorphic-card py-2 px-4 inline-block rounded-full">
               <p className="text-sm text-white">
                 Welcome, <span className="text-app-purple font-semibold">@{user.username}!</span>
+                {wallet.connected && wallet.formattedAddress && (
+                  <span className="ml-2 text-gray-300 text-xs">({wallet.formattedAddress})</span>
+                )}
               </p>
             </div>
           )}

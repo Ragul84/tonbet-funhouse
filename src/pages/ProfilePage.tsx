@@ -28,7 +28,7 @@ const ProfilePage = () => {
             <h1 className="text-2xl font-bold mb-1">{user?.firstName} {user?.lastName}</h1>
             <p className="text-gray-400 mb-4">@{user?.username}</p>
             
-            {wallet.connected ? (
+            {wallet.connected && wallet.formattedAddress ? (
               <div className="neomorphic-wallet px-4 py-2 rounded-full mb-4">
                 <p className="text-sm text-gray-400">Wallet</p>
                 <p className="font-medium text-white text-sm">{wallet.formattedAddress}</p>

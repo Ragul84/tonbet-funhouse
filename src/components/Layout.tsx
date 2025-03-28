@@ -31,8 +31,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   // Format wallet address for display
   const formatAddress = () => {
-    // Use the already formatted address from the wallet object
-    return wallet.formattedAddress || "";
+    // Ensure we use the properly formatted address (should be in UQ... format now)
+    if (wallet.formattedAddress) {
+      console.log("Using formatted address:", wallet.formattedAddress);
+      return wallet.formattedAddress;
+    }
+    return "";
   };
 
   // Format balance for display

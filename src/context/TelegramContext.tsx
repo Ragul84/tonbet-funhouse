@@ -205,6 +205,9 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const rawAddress = walletInfo.account.address;
         const formattedAddress = formatTonAddress(rawAddress);
         
+        console.info("Raw address:", rawAddress);
+        console.info("Formatted address:", formattedAddress);
+        
         setWallet({
           connected: true,
           address: rawAddress,
