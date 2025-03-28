@@ -68,16 +68,21 @@ export async function run() {
   console.log(`\n📍 Casino contract address: ${contractAddr.toString()}`);
   
   // Save contract addresses to file for frontend use
-  const contractAddresses = JSON.parse(fs.readFileSync("src/contracts/addresses.json", "utf8"));
-  
-  if (isTestnet) {
-    contractAddresses.testnet = contractAddr.toString();
-  } else {
-    contractAddresses.mainnet = contractAddr.toString();
+  try {
+    const contractAddresses = JSON.parse(fs.readFileSync("src/contracts/addresses.json", "utf8"));
+    
+    if (isTestnet) {
+      contractAddresses.testnet = contractAddr.toString();
+    } else {
+      contractAddresses.mainnet = contractAddr.toString();
+    }
+    
+    fs.writeFileSync("src/contracts/addresses.json", JSON.stringify(contractAddresses, null, 2));
+    console.log(`💾 Saved address to addresses.json`);
+  } catch (error) {
+    console.error("Error updating addresses.json file:", error);
+    console.log("Please make sure the file exists and is writeable");
   }
-  
-  fs.writeFileSync("src/contracts/addresses.json", JSON.stringify(contractAddresses, null, 2));
-  console.log(`💾 Saved address to addresses.json`);
   
   console.log("\n🚀 Casino contract ready for deployment");
   console.log(`💰 To deploy, send at least ${INITIAL_BALANCE} TON to ${contractAddr.toString()}`);
@@ -91,6 +96,8 @@ export async function run() {
     console.log("You can do this by sending a message to the randomness contract");
     console.log("with op=3 and the casino address.");
   }
+  
+  return contractAddr; // Return the address for Blueprint to use
 }
 
 // Helper function to calculate contract address

@@ -33,6 +33,7 @@ export async function run() {
   // Read existing contract addresses
   let contractAddresses;
   try {
+    // Use path relative to project root since Blueprint runs from there
     contractAddresses = JSON.parse(fs.readFileSync("src/contracts/addresses.json", "utf8"));
   } catch (error) {
     contractAddresses = {
@@ -63,16 +64,22 @@ export async function run() {
   console.log(`\n📍 Randomness contract address: ${contractAddr.toString()}`);
   
   // Save the address to a file for easy access
-  const randomnessAddresses = JSON.parse(fs.readFileSync("src/contracts/randomnessAddress.json", "utf8"));
-  
-  if (isTestnet) {
-    randomnessAddresses.testnet = contractAddr.toString();
-  } else {
-    randomnessAddresses.mainnet = contractAddr.toString();
+  try {
+    // Try to read the existing file
+    const randomnessAddresses = JSON.parse(fs.readFileSync("src/contracts/randomnessAddress.json", "utf8"));
+    
+    if (isTestnet) {
+      randomnessAddresses.testnet = contractAddr.toString();
+    } else {
+      randomnessAddresses.mainnet = contractAddr.toString();
+    }
+    
+    fs.writeFileSync("src/contracts/randomnessAddress.json", JSON.stringify(randomnessAddresses, null, 2));
+    console.log(`💾 Saved address to randomnessAddress.json`);
+  } catch (error) {
+    console.error("Error updating randomnessAddress.json file:", error);
+    console.log("Please make sure the file exists and is writeable");
   }
-  
-  fs.writeFileSync("src/contracts/randomnessAddress.json", JSON.stringify(randomnessAddresses, null, 2));
-  console.log(`💾 Saved address to randomnessAddress.json`);
   
   console.log("\n🚀 Randomness contract ready for deployment");
   console.log(`💰 To deploy, send at least ${INITIAL_BALANCE} TON to ${contractAddr.toString()}`);
@@ -84,6 +91,8 @@ export async function run() {
   console.log("2. Wait for the transaction to confirm");
   console.log("3. Use this randomness address when deploying the casino contract");
   console.log("4. After deploying the casino, update the randomness contract with the casino address");
+  
+  return contractAddr; // Return the address for Blueprint to use
 }
 
 // Helper function to calculate contract address
