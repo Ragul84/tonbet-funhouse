@@ -6,7 +6,7 @@ import { compile } from "@ton/blueprint";
 // Configure these parameters for deployment
 const INITIAL_BALANCE = "1"; // TON to be sent to the contract
 
-async function main() {
+export async function run() {
   console.log("🚀 Starting Randomness Provider contract deployment...");
   
   // Read and compile contract
@@ -25,6 +25,11 @@ async function main() {
   
   console.log(`👤 Owner address: ${ownerAddress}`);
   
+  // Determine network from environment variable
+  const isTestnet = process.env.USE_TESTNET && 
+    (process.env.USE_TESTNET.toLowerCase() === "true" || 
+     process.env.USE_TESTNET === "1");
+  
   // Read existing contract addresses
   let contractAddresses;
   try {
@@ -36,11 +41,6 @@ async function main() {
     };
     console.warn("Could not read addresses.json, using placeholders");
   }
-  
-  // Determine network from environment variable
-  const isTestnet = process.env.USE_TESTNET && 
-    (process.env.USE_TESTNET.toLowerCase() === "true" || 
-     process.env.USE_TESTNET === "1");
   
   // Casino address is not required initially, it can be updated later
   // Use the appropriate address based on network
@@ -96,5 +96,3 @@ function calculateContractAddress(workchain: number, stateInit: { code: Cell; da
   const hash = stateInitCell.hash();
   return new Address(workchain, hash);
 }
-
-main().catch(console.error);

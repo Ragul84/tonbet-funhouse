@@ -9,7 +9,7 @@ const MIN_BET = "0.1"; // Minimum bet in TON
 const MAX_BET = "100"; // Maximum bet in TON
 const HOUSE_EDGE = 200; // 2% house edge in basis points
 
-async function main() {
+export async function run() {
   console.log("🚀 Starting TonCasino contract deployment...");
   
   // Read and compile contract
@@ -103,5 +103,3 @@ function calculateContractAddress(workchain: number, stateInit: { code: Cell; da
   const hash = stateInitCell.hash();
   return new Address(workchain, hash);
 }
-
-main().catch(console.error);
