@@ -25,8 +25,25 @@ async function main() {
   
   console.log(`👤 Owner address: ${ownerAddress}`);
   
+  // Read existing contract addresses
+  let contractAddresses;
+  try {
+    contractAddresses = JSON.parse(fs.readFileSync("src/contracts/addresses.json", "utf8"));
+  } catch (error) {
+    contractAddresses = {
+      mainnet: "EQD__MAINNET_CASINO_PLACEHOLDER__",
+      testnet: "EQD__TESTNET_CASINO_PLACEHOLDER__"
+    };
+    console.warn("Could not read addresses.json, using placeholders");
+  }
+  
   // Casino address is not required initially, it can be updated later
-  const casinoAddress = process.env.CASINO_ADDRESS || "EQD__CASINO_ADDRESS_PLACEHOLDER__";
+  // Use the appropriate address based on network
+  const isTestnet = process.env.USE_TESTNET === "true";
+  const casinoAddress = isTestnet ? 
+    contractAddresses.testnet : 
+    contractAddresses.mainnet;
+  
   console.log(`🎰 Initial casino address: ${casinoAddress} (can be updated later)`);
 
   // Create initial data cell (contract state)
@@ -40,8 +57,6 @@ async function main() {
   const contractAddr = calculateContractAddress(0, { code: randomnessCode, data: dataCell });
   console.log(`\n📍 Randomness contract address: ${contractAddr.toString()}`);
   
-  // Determine if we're using testnet
-  const isTestnet = process.env.USE_TESTNET === "true";
   console.log(`🌐 Network: ${isTestnet ? "TESTNET" : "MAINNET"}`);
   
   // Save the address to a file for easy access
