@@ -16,7 +16,7 @@ const Dice: React.FC = () => {
     
     // Start animation
     if (diceRef.current) {
-      diceRef.current.classList.add("animate-roll");
+      diceRef.current.classList.add("animate-dice-roll");
     }
     
     // Determine random result for visual purposes
@@ -31,9 +31,9 @@ const Dice: React.FC = () => {
       setIsRolling(false);
       
       if (diceRef.current) {
-        diceRef.current.classList.remove("animate-roll");
+        diceRef.current.classList.remove("animate-dice-roll");
       }
-    }, 1500);
+    }, 2000);
   };
 
   // Render dice dots based on value
@@ -44,37 +44,37 @@ const Dice: React.FC = () => {
     
     switch (diceValue) {
       case 1:
-        dots.push(<div key="center" className="dice-dot top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />);
+        dots.push(<div key="center" className="dice-dot absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />);
         break;
       case 2:
-        dots.push(<div key="tl" className="dice-dot top-2 left-2" />);
-        dots.push(<div key="br" className="dice-dot bottom-2 right-2" />);
+        dots.push(<div key="tl" className="dice-dot absolute top-2 left-2" />);
+        dots.push(<div key="br" className="dice-dot absolute bottom-2 right-2" />);
         break;
       case 3:
-        dots.push(<div key="tl" className="dice-dot top-2 left-2" />);
-        dots.push(<div key="center" className="dice-dot top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />);
-        dots.push(<div key="br" className="dice-dot bottom-2 right-2" />);
+        dots.push(<div key="tl" className="dice-dot absolute top-2 left-2" />);
+        dots.push(<div key="center" className="dice-dot absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />);
+        dots.push(<div key="br" className="dice-dot absolute bottom-2 right-2" />);
         break;
       case 4:
-        dots.push(<div key="tl" className="dice-dot top-2 left-2" />);
-        dots.push(<div key="tr" className="dice-dot top-2 right-2" />);
-        dots.push(<div key="bl" className="dice-dot bottom-2 left-2" />);
-        dots.push(<div key="br" className="dice-dot bottom-2 right-2" />);
+        dots.push(<div key="tl" className="dice-dot absolute top-2 left-2" />);
+        dots.push(<div key="tr" className="dice-dot absolute top-2 right-2" />);
+        dots.push(<div key="bl" className="dice-dot absolute bottom-2 left-2" />);
+        dots.push(<div key="br" className="dice-dot absolute bottom-2 right-2" />);
         break;
       case 5:
-        dots.push(<div key="tl" className="dice-dot top-2 left-2" />);
-        dots.push(<div key="tr" className="dice-dot top-2 right-2" />);
-        dots.push(<div key="center" className="dice-dot top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />);
-        dots.push(<div key="bl" className="dice-dot bottom-2 left-2" />);
-        dots.push(<div key="br" className="dice-dot bottom-2 right-2" />);
+        dots.push(<div key="tl" className="dice-dot absolute top-2 left-2" />);
+        dots.push(<div key="tr" className="dice-dot absolute top-2 right-2" />);
+        dots.push(<div key="center" className="dice-dot absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />);
+        dots.push(<div key="bl" className="dice-dot absolute bottom-2 left-2" />);
+        dots.push(<div key="br" className="dice-dot absolute bottom-2 right-2" />);
         break;
       case 6:
-        dots.push(<div key="tl" className="dice-dot top-2 left-2" />);
-        dots.push(<div key="tm" className="dice-dot top-2 left-1/2 transform -translate-x-1/2" />);
-        dots.push(<div key="tr" className="dice-dot top-2 right-2" />);
-        dots.push(<div key="bl" className="dice-dot bottom-2 left-2" />);
-        dots.push(<div key="bm" className="dice-dot bottom-2 left-1/2 transform -translate-x-1/2" />);
-        dots.push(<div key="br" className="dice-dot bottom-2 right-2" />);
+        dots.push(<div key="tl" className="dice-dot absolute top-2 left-2" />);
+        dots.push(<div key="tm" className="dice-dot absolute top-2 left-1/2 transform -translate-x-1/2" />);
+        dots.push(<div key="tr" className="dice-dot absolute top-2 right-2" />);
+        dots.push(<div key="bl" className="dice-dot absolute bottom-2 left-2" />);
+        dots.push(<div key="bm" className="dice-dot absolute bottom-2 left-1/2 transform -translate-x-1/2" />);
+        dots.push(<div key="br" className="dice-dot absolute bottom-2 right-2" />);
         break;
     }
     
@@ -85,7 +85,7 @@ const Dice: React.FC = () => {
   useEffect(() => {
     return () => {
       if (diceRef.current) {
-        diceRef.current.classList.remove("animate-roll");
+        diceRef.current.classList.remove("animate-dice-roll");
       }
     };
   }, []);
@@ -97,12 +97,14 @@ const Dice: React.FC = () => {
         Bet on high (4-6) or low (1-3) and win 1.8x your bet if you're right!
       </p>
 
-      <div className="flex justify-center my-12">
+      <div className="flex justify-center my-12 perspective-[1000px]">
         <div 
           ref={diceRef} 
-          className="dice w-24 h-24"
+          className={`dice-container ${isRolling ? 'rolling' : ''}`}
         >
-          {!isRolling && renderDiceDots()}
+          <div className={`dice ${isRolling ? 'invisible' : 'visible'} w-24 h-24 relative`}>
+            {!isRolling && renderDiceDots()}
+          </div>
         </div>
       </div>
 

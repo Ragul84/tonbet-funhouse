@@ -8,7 +8,9 @@ const DicePage = () => {
   return (
     <Layout>
       <div className="max-w-md mx-auto">
-        <Dice />
+        <div className="glass-card p-6 mb-6">
+          <Dice />
+        </div>
         <div className="mt-6">
           <BetHistory />
         </div>
