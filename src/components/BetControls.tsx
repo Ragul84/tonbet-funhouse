@@ -19,9 +19,12 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
   const getAvailableBalance = () => {
     if (wallet.connected && wallet.balance) {
       // Convert string to number if needed
-      return typeof wallet.balance === 'string' 
+      const numericBalance = typeof wallet.balance === 'string' 
         ? parseFloat(wallet.balance) 
         : wallet.balance;
+      
+      // Return with 2 decimal precision for consistency
+      return parseFloat(numericBalance.toFixed(2));
     }
     return balance;
   };
@@ -29,21 +32,28 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
   const availableBalance = getAvailableBalance();
 
   const increaseBet = (amount: number) => {
-    setBetAmount((prev) => Math.min(prev + amount, availableBalance));
+    setBetAmount((prev) => {
+      const newAmount = Math.min(prev + amount, availableBalance);
+      return parseFloat(newAmount.toFixed(2)); // Ensure proper decimal formatting
+    });
   };
 
   const decreaseBet = (amount: number) => {
-    setBetAmount((prev) => Math.max(prev - amount, 1));
+    setBetAmount((prev) => {
+      const newAmount = Math.max(prev - amount, 0.1); // Minimum bet of 0.1 TON
+      return parseFloat(newAmount.toFixed(2)); // Ensure proper decimal formatting
+    });
   };
 
   const setMaxBet = () => {
-    setBetAmount(availableBalance);
+    setBetAmount(parseFloat(availableBalance.toFixed(2)));
   };
 
   const handleBetAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
     if (!isNaN(value) && value >= 0) {
-      setBetAmount(Math.min(value, availableBalance));
+      const newAmount = Math.min(value, availableBalance);
+      setBetAmount(parseFloat(newAmount.toFixed(2)));
     } else {
       setBetAmount(0);
     }
@@ -77,6 +87,8 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
     );
   }
 
+  const isInsufficientBalance = betAmount > availableBalance;
+
   return (
     <div className="glass-card p-4 space-y-4">
       <div className="flex items-center justify-between mb-2">
@@ -107,8 +119,15 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
             type="number"
             value={betAmount}
             onChange={handleBetAmountChange}
-            className="bg-black/30 border-app-purple/30 focus:border-app-purple w-full"
+            className={`bg-black/30 ${
+              isInsufficientBalance 
+                ? "border-red-500 focus:border-red-500" 
+                : "border-app-purple/30 focus:border-app-purple"
+            } w-full`}
           />
+          {isInsufficientBalance && (
+            <p className="text-xs text-red-500 mt-1">Insufficient balance</p>
+          )}
         </div>
         <div className="flex flex-col space-y-2">
           <Button 
@@ -134,21 +153,24 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
         <Button 
           onClick={() => setBetAmount(5)} 
           variant="outline" 
-          className="bg-black/30 hover:bg-app-purple/20 border-app-purple/30 flex-1"
+          className={`bg-black/30 hover:bg-app-purple/20 border-app-purple/30 flex-1 ${betAmount === 5 && "bg-app-purple/20"}`}
+          disabled={5 > availableBalance}
         >
           5
         </Button>
         <Button 
           onClick={() => setBetAmount(10)} 
           variant="outline" 
-          className="bg-black/30 hover:bg-app-purple/20 border-app-purple/30 flex-1"
+          className={`bg-black/30 hover:bg-app-purple/20 border-app-purple/30 flex-1 ${betAmount === 10 && "bg-app-purple/20"}`}
+          disabled={10 > availableBalance}
         >
           10
         </Button>
         <Button 
           onClick={() => setBetAmount(25)} 
           variant="outline" 
-          className="bg-black/30 hover:bg-app-purple/20 border-app-purple/30 flex-1"
+          className={`bg-black/30 hover:bg-app-purple/20 border-app-purple/30 flex-1 ${betAmount === 25 && "bg-app-purple/20"}`}
+          disabled={25 > availableBalance}
         >
           25
         </Button>
@@ -164,10 +186,18 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
       <Button 
         onClick={onBet} 
         disabled={disabled || isLoading || betAmount <= 0 || betAmount > availableBalance}
-        className="w-full bg-app-purple hover:bg-app-purple/90 hover:shadow-neon"
+        className={`w-full ${
+          isInsufficientBalance || betAmount <= 0
+            ? "bg-gray-600 cursor-not-allowed"
+            : "bg-app-purple hover:bg-app-purple/90 hover:shadow-neon"
+        }`}
       >
-        {isLoading ? "Placing Bet..." : "Place Bet"}
+        {isLoading ? "Processing..." : "Place Bet"}
       </Button>
+      
+      <div className="text-xs text-gray-400 text-center">
+        Platform fee: 0.2% • Min bet: 0.1 TON
+      </div>
     </div>
   );
 };

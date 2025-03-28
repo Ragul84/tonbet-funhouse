@@ -187,6 +187,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Listen for bet results from the smart contract
+  useEffect(() => {
+    // This is a placeholder for actual blockchain event subscription
+    // In a real implementation, you would:
+    // 1. Subscribe to events from your smart contract
+    // 2. Process incoming events to update game state
+    // 3. Handle payouts based on confirmed results
+    
+    // Example pseudocode:
+    // const unsubscribe = subscribeToContractEvents(GAME_CONTRACT_ADDRESS, (event) => {
+    //   if (event.type === 'betResolved' && event.userId === user?.id) {
+    //     const { betId, outcome, payout } = event;
+    //     // Update bet history and balance
+    //     updateBetOutcome(betId, outcome, payout);
+    //   }
+    // });
+    
+    // return () => unsubscribe();
+  }, [user]);
+
   const placeBet = async (game: GameType, prediction: any, isTrial: boolean = false): Promise<boolean> => {
     if (!user) {
       toast.error("Please connect to Telegram first");
@@ -247,11 +267,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
         return false;
       }
+      
+      // For now, proceed with simulated outcome even after real transaction
+      // In production, the outcome would be determined by the smart contract
+      toast.info("Waiting for game result...");
     }
 
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
+    // In a production app, the outcome would be determined by the smart contract
+    // For now, we'll use our simulated logic
     let isWin = false;
     let winAmount = 0;
     const platformFee = isTrial ? 0 : betAmount * 0.002; // No fee for trial plays
