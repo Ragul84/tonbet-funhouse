@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
+import { checkWalletAvailability, connectToTonkeeper } from "@/utils/walletUtils";
 
 declare global {
   interface Window {
@@ -93,6 +94,8 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const connectWallet = async () => {
     try {
       console.log("Starting wallet connection attempt...");
+      const availability = checkWalletAvailability();
+      console.log("Wallet availability check:", availability);
       
       if (window.Telegram?.WebApp && window.Telegram.WebApp.initData) {
         toast.info("Connecting to TON wallet via Telegram...");
@@ -116,32 +119,28 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.log("Tonkeeper detected, attempting to connect");
         
         try {
-          if (!window.tonkeeper.ready) {
-            await new Promise<void>((resolve) => {
-              const checkReady = () => {
-                if (window.tonkeeper?.ready) {
-                  resolve();
-                } else {
-                  setTimeout(checkReady, 100);
-                }
-              };
-              checkReady();
+          const result = await connectToTonkeeper();
+          
+          if (result && result.address) {
+            let balance = "0";
+            try {
+              balance = await window.tonkeeper.getBalance();
+            } catch (err) {
+              console.warn("Could not get balance:", err);
+            }
+            
+            setWallet({
+              connected: true,
+              address: result.address,
+              balance: balance
             });
+            
+            toast.success("Connected to Tonkeeper wallet!");
+            return;
+          } else {
+            console.warn("Connection to Tonkeeper returned invalid result:", result);
+            toast.error("Failed to connect to Tonkeeper. Please try again.");
           }
-          
-          const result = await window.tonkeeper.connect();
-          console.log("Tonkeeper connect result:", result);
-          
-          const balance = await window.tonkeeper.getBalance();
-          
-          setWallet({
-            connected: true,
-            address: result.address,
-            balance: balance
-          });
-          
-          toast.success("Connected to Tonkeeper wallet!");
-          return;
         } catch (error) {
           console.error("Error connecting to Tonkeeper:", error);
           toast.error("Failed to connect to Tonkeeper. Please try again.");
@@ -194,14 +193,20 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
       
-      console.log("No compatible wallet found. Available globals:", {
-        tonkeeper: !!window.tonkeeper,
-        TON: !!window.TON,
-        TonConnect: !!window.TonConnect
-      });
-      
-      toast.error("No compatible TON wallet detected. Please install Tonkeeper extension or another TON wallet.");
-      console.warn("No compatible TON wallet detected. Please ensure Tonkeeper or another TON wallet extension is installed.");
+      if (!availability.tonkeeper.available && 
+          !availability.TON.available && 
+          !availability.TonConnect.available) {
+        console.log("No compatible wallet found. Available globals:", {
+          tonkeeper: !!window.tonkeeper,
+          TON: !!window.TON,
+          TonConnect: !!window.TonConnect
+        });
+        
+        toast.error("No compatible TON wallet detected. Please install Tonkeeper extension or another TON wallet.");
+        console.warn("No compatible TON wallet detected. Please ensure Tonkeeper or another TON wallet extension is installed.");
+      } else {
+        toast.error("Could not connect to any available wallet. Please try again.");
+      }
     } catch (error) {
       console.error("Error connecting wallet:", error);
       toast.error("Failed to connect wallet. Please try again.");

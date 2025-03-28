@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { useTelegramContext } from "@/context/TelegramContext";
@@ -9,12 +9,20 @@ import {
   Dice5, 
   TrendingUp, 
   Trophy, 
-  Wallet 
+  Wallet, 
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BetHistory from "@/components/BetHistory";
 import RevenueInfo from "@/components/RevenueInfo";
 import { checkWalletAvailability } from "@/utils/walletUtils";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const GameCard = ({ 
   title, 
@@ -48,6 +56,8 @@ const GameCard = ({
 
 const Index: React.FC = () => {
   const { wallet, connectWallet } = useTelegramContext();
+  const [connecting, setConnecting] = useState(false);
+  const [showWalletInfo, setShowWalletInfo] = useState(false);
   
   const handleConnectWallet = async () => {
     const availability = checkWalletAvailability();
@@ -56,11 +66,17 @@ const Index: React.FC = () => {
     if (!availability.tonkeeper.available && 
         !availability.TON.available && 
         !availability.TonConnect.available) {
-      alert("No TON wallets detected. Please install the Tonkeeper extension or another compatible TON wallet.");
+      toast.error("No TON wallets detected. Please install the Tonkeeper extension or another compatible TON wallet.");
+      setShowWalletInfo(true);
       return;
     }
     
-    await connectWallet();
+    setConnecting(true);
+    try {
+      await connectWallet();
+    } finally {
+      setConnecting(false);
+    }
   };
   
   return (
@@ -85,9 +101,19 @@ const Index: React.FC = () => {
                 <Button 
                   onClick={handleConnectWallet}
                   className="bg-app-purple hover:bg-app-purple/90 py-6 px-8 text-lg"
+                  disabled={connecting}
                 >
-                  <Wallet className="mr-2 h-5 w-5" />
-                  Connect Wallet
+                  {connecting ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Wallet className="mr-2 h-5 w-5" />
+                      Connect Wallet
+                    </>
+                  )}
                 </Button>
               </div>
             )}
@@ -127,6 +153,36 @@ const Index: React.FC = () => {
         <RevenueInfo />
         
         <BetHistory gameType="all" />
+        
+        <Dialog open={showWalletInfo} onOpenChange={setShowWalletInfo}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Install a TON Wallet</DialogTitle>
+              <DialogDescription>
+                <div className="mt-4 space-y-4">
+                  <p>To interact with this app, you need a TON wallet. We recommend Tonkeeper:</p>
+                  
+                  <div className="p-4 bg-gray-900/50 rounded-lg">
+                    <h3 className="font-semibold mb-2">Tonkeeper</h3>
+                    <p className="text-sm mb-2">The most popular TON wallet with browser extension support</p>
+                    <a 
+                      href="https://tonkeeper.com/extension"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-app-purple hover:underline"
+                    >
+                      Download Tonkeeper Extension
+                    </a>
+                  </div>
+                  
+                  <p className="text-sm text-gray-400">
+                    After installation, refresh this page and click "Connect Wallet" again.
+                  </p>
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
