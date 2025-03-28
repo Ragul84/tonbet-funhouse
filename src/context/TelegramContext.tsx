@@ -34,6 +34,18 @@ declare global {
       address: string | null;
       getBalance: () => Promise<string>;
     };
+    tonkeeper?: {
+      ready: boolean;
+      connect: () => Promise<{ address: string; publicKey: string }>;
+      disconnect: () => Promise<void>;
+      isConnected: () => Promise<boolean>;
+      getBalance: () => Promise<string>;
+      address?: string;
+      walletInfo?: { 
+        address: string;
+        publicKey: string;
+      };
+    };
   }
 }
 
@@ -80,9 +92,10 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const connectWallet = async () => {
     try {
+      console.log("Starting wallet connection attempt...");
+      
       if (window.Telegram?.WebApp && window.Telegram.WebApp.initData) {
         toast.info("Connecting to TON wallet via Telegram...");
-        
         console.log("Attempting to connect wallet via Telegram WebApp");
         
         const mockAddress = "UQBrZ7sgyxPrFZKzMxBUj1ZJ27JNXEF7IgmVWZvxktA6PAM2";
@@ -96,6 +109,43 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         
         toast.success("Wallet connected via Telegram!");
         return;
+      }
+      
+      if (window.tonkeeper) {
+        toast.info("Connecting to Tonkeeper wallet...");
+        console.log("Tonkeeper detected, attempting to connect");
+        
+        try {
+          if (!window.tonkeeper.ready) {
+            await new Promise<void>((resolve) => {
+              const checkReady = () => {
+                if (window.tonkeeper?.ready) {
+                  resolve();
+                } else {
+                  setTimeout(checkReady, 100);
+                }
+              };
+              checkReady();
+            });
+          }
+          
+          const result = await window.tonkeeper.connect();
+          console.log("Tonkeeper connect result:", result);
+          
+          const balance = await window.tonkeeper.getBalance();
+          
+          setWallet({
+            connected: true,
+            address: result.address,
+            balance: balance
+          });
+          
+          toast.success("Connected to Tonkeeper wallet!");
+          return;
+        } catch (error) {
+          console.error("Error connecting to Tonkeeper:", error);
+          toast.error("Failed to connect to Tonkeeper. Please try again.");
+        }
       }
       
       if (window.TON) {
@@ -116,7 +166,6 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         } catch (error) {
           console.error("Error connecting to TON wallet:", error);
           toast.error("Failed to connect TON wallet. Please try again.");
-          throw error;
         }
       }
       
@@ -142,12 +191,17 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         } catch (error) {
           console.error("Error connecting via TonConnect:", error);
           toast.error("Failed to connect wallet via TonConnect. Please try again.");
-          throw error;
         }
       }
       
-      toast.error("No compatible TON wallet detected. Please install Tonkeeper or another TON wallet extension.");
-      console.log("No TON wallet detected. User needs to install a TON wallet extension.");
+      console.log("No compatible wallet found. Available globals:", {
+        tonkeeper: !!window.tonkeeper,
+        TON: !!window.TON,
+        TonConnect: !!window.TonConnect
+      });
+      
+      toast.error("No compatible TON wallet detected. Please install Tonkeeper extension or another TON wallet.");
+      console.warn("No compatible TON wallet detected. Please ensure Tonkeeper or another TON wallet extension is installed.");
     } catch (error) {
       console.error("Error connecting wallet:", error);
       toast.error("Failed to connect wallet. Please try again.");

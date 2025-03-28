@@ -1,4 +1,3 @@
-
 import React from "react";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -15,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import BetHistory from "@/components/BetHistory";
 import RevenueInfo from "@/components/RevenueInfo";
+import { checkWalletAvailability } from "@/utils/walletUtils";
 
 const GameCard = ({ 
   title, 
@@ -49,10 +49,23 @@ const GameCard = ({
 const Index: React.FC = () => {
   const { wallet, connectWallet } = useTelegramContext();
   
+  const handleConnectWallet = async () => {
+    const availability = checkWalletAvailability();
+    console.log("Wallet availability check:", availability);
+    
+    if (!availability.tonkeeper.available && 
+        !availability.TON.available && 
+        !availability.TonConnect.available) {
+      alert("No TON wallets detected. Please install the Tonkeeper extension or another compatible TON wallet.");
+      return;
+    }
+    
+    await connectWallet();
+  };
+  
   return (
     <Layout>
       <div className="space-y-8">
-        {/* Hero Section */}
         <div className="glass-card p-8 relative overflow-hidden">
           <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-app-purple/20 filter blur-2xl"></div>
           <div className="absolute -bottom-32 -left-20 w-64 h-64 rounded-full bg-app-pink/10 filter blur-3xl"></div>
@@ -70,7 +83,7 @@ const Index: React.FC = () => {
             {!wallet.connected && (
               <div className="flex justify-center">
                 <Button 
-                  onClick={connectWallet}
+                  onClick={handleConnectWallet}
                   className="bg-app-purple hover:bg-app-purple/90 py-6 px-8 text-lg"
                 >
                   <Wallet className="mr-2 h-5 w-5" />
@@ -81,7 +94,6 @@ const Index: React.FC = () => {
           </div>
         </div>
         
-        {/* Games Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <GameCard 
             title="Coinflip" 
@@ -112,10 +124,8 @@ const Index: React.FC = () => {
           />
         </div>
         
-        {/* Revenue Information */}
         <RevenueInfo />
         
-        {/* Recent Bets */}
         <BetHistory gameType="all" />
       </div>
     </Layout>
