@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useTonConnectUI } from "@tonconnect/ui-react";
@@ -154,13 +155,17 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.info("Wallet status changed:", walletInfo ? "connected" : "disconnected");
       
       if (walletInfo) {
-        const address = walletInfo.account.address;
-        console.info("Wallet connected:", address);
+        const rawAddress = walletInfo.account.address;
+        console.info("Wallet connected:", rawAddress);
+        
+        // This is the critical part we need to fix - use formatTonAddress properly
+        const formattedAddress = formatTonAddress(rawAddress);
+        console.info("Formatted address:", formattedAddress);
         
         setWallet({
           connected: true,
-          address: address,
-          formattedAddress: formatTonAddress(address),
+          address: rawAddress,
+          formattedAddress: formattedAddress,
           balance: "Loading..."
         });
         
@@ -199,11 +204,14 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.info("Wallet already connected, fetching info");
       const walletInfo = tonConnectUI.wallet;
       if (walletInfo) {
-        const address = walletInfo.account.address;
+        const rawAddress = walletInfo.account.address;
+        // Make sure we format the address here too
+        const formattedAddress = formatTonAddress(rawAddress);
+        
         setWallet({
           connected: true,
-          address: address,
-          formattedAddress: formatTonAddress(address),
+          address: rawAddress,
+          formattedAddress: formattedAddress,
           balance: "Loading..."
         });
         
