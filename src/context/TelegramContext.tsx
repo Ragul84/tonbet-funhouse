@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useTonConnectUI } from "@tonconnect/ui-react";
@@ -158,7 +157,6 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const rawAddress = walletInfo.account.address;
         console.info("Wallet connected:", rawAddress);
         
-        // This is the critical part we need to fix - use formatTonAddress properly
         const formattedAddress = formatTonAddress(rawAddress);
         console.info("Formatted address:", formattedAddress);
         
@@ -205,7 +203,6 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const walletInfo = tonConnectUI.wallet;
       if (walletInfo) {
         const rawAddress = walletInfo.account.address;
-        // Make sure we format the address here too
         const formattedAddress = formatTonAddress(rawAddress);
         
         setWallet({

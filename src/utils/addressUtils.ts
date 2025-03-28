@@ -13,12 +13,17 @@ export const formatTonAddress = (address: string | null): string | null => {
   try {
     // Since we can't use @ton/core in the browser directly due to Buffer issues,
     // we'll use a simpler approach for formatting the address
+    
+    // Check if it's in the standard format with workchain:hex
     if (address.includes(':')) {
       const parts = address.split(':');
       if (parts.length === 2) {
-        // Take first 6 and last 4 characters for a simplified display
-        const shortAddress = `${parts[0]}:${parts[1].slice(0, 6)}...${parts[1].slice(-4)}`;
-        return shortAddress;
+        const workchain = parts[0];
+        const hexPart = parts[1];
+        
+        // Format it in a more user-friendly way
+        // Show workchain and first 6 chars...last 4 chars
+        return `${workchain}:${hexPart.slice(0, 6)}...${hexPart.slice(-4)}`;
       }
     }
     
