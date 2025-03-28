@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useGameContext } from "@/context/GameContext";
 import BetControls from "@/components/BetControls";
 import { Button } from "@/components/ui/button";
@@ -24,8 +24,17 @@ const Dice: React.FC = () => {
     // Place bet
     const isWin = await placeBet("dice", prediction, useTrial);
     
-    // Generate random result for visual
-    const diceResult = Math.floor(Math.random() * 6) + 1;
+    // Generate random result for visual that matches prediction outcome
+    // High (4-6) for wins with high prediction or losses with low prediction
+    // Low (1-3) for wins with low prediction or losses with high prediction
+    let diceResult;
+    if ((isWin && prediction === "high") || (!isWin && prediction === "low")) {
+      // Show high number (4-6)
+      diceResult = Math.floor(Math.random() * 3) + 4;
+    } else {
+      // Show low number (1-3)
+      diceResult = Math.floor(Math.random() * 3) + 1;
+    }
     
     // Show result after animation completes
     setTimeout(() => {

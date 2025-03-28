@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useTelegramContext } from "./TelegramContext";
@@ -187,24 +188,27 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let winAmount = 0;
     const platformFee = isTrial ? 0 : betAmount * 0.002; // No fee for trial plays
 
-    // Different game logic
+    // Different game logic with adjusted win rates
     switch (game) {
       case "coinflip":
-        // 49% chance to win (accounting for house edge)
-        isWin = generateOutcome(0.49) && prediction === (Math.random() < 0.5 ? "heads" : "tails");
+        // 40% chance to win
+        isWin = generateOutcome(0.4) && prediction === (Math.random() < 0.5 ? "heads" : "tails");
         break;
       case "dice":
         const diceResult = Math.floor(Math.random() * 6) + 1;
         if (prediction === "high") {
-          isWin = diceResult > 3 && generateOutcome(0.49);
+          // 40% chance to win for high prediction (4-6)
+          isWin = diceResult > 3 && generateOutcome(0.4);
         } else {
-          isWin = diceResult <= 3 && generateOutcome(0.49);
+          // 40% chance to win for low prediction (1-3)
+          isWin = diceResult <= 3 && generateOutcome(0.4);
         }
         break;
       case "crash":
         // For crash, prediction is the cash-out multiplier
         const crashPoint = (0.9 + Math.random() * 9).toFixed(2);
-        isWin = Number(crashPoint) > prediction;
+        // Adjust crash win rate to match the 40% target
+        isWin = Number(crashPoint) > prediction && generateOutcome(0.4);
         break;
     }
 
