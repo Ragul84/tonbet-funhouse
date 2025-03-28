@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import BetHistory from "@/components/BetHistory";
 import RevenueInfo from "@/components/RevenueInfo";
 import { checkWalletAvailability } from "@/utils/walletUtils";
+import { toast } from "sonner";
 import { 
   Dialog,
   DialogContent,
