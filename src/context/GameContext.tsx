@@ -1,7 +1,13 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useTelegramContext } from "./TelegramContext";
+
+// Add a type declaration for the TON property on the Window object
+declare global {
+  interface Window {
+    TON?: any; // Define TON as an optional property of type any
+  }
+}
 
 type GameType = "coinflip" | "dice" | "crash";
 
