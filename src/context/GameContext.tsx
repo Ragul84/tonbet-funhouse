@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useTelegramContext } from "./TelegramContext";
@@ -9,6 +8,9 @@ declare global {
     TON?: any; // Define TON as an optional property of type any
   }
 }
+
+// Define the contract address where bets will be sent
+const GAME_CONTRACT_ADDRESS = "EQD__CONTRACT_ADDRESS_PLACEHOLDER__";
 
 type GameType = "coinflip" | "dice" | "crash";
 
@@ -117,6 +119,74 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  // Function to encode game data for smart contract
+  const encodeGameData = (game: GameType, prediction: any): string => {
+    // In a real implementation, you would encode the game type and prediction
+    // for the smart contract to understand
+    const gameCode = game === "coinflip" ? 1 : game === "dice" ? 2 : 3;
+    
+    // Convert prediction to a format the contract would understand
+    let predictionValue;
+    switch (game) {
+      case "coinflip":
+        predictionValue = prediction === "heads" ? 1 : 2;
+        break;
+      case "dice":
+        predictionValue = prediction === "high" ? 1 : 2;
+        break;
+      case "crash":
+        // For crash, we convert the multiplier to basis points (1.5x = 150)
+        predictionValue = Math.floor(prediction * 100);
+        break;
+      default:
+        predictionValue = 0;
+    }
+    
+    // This is a placeholder - in a real implementation you would use
+    // proper TON contract encoding methods
+    return `game:${gameCode},pred:${predictionValue}`;
+  };
+
+  // Process a real TON transaction
+  const processRealTransaction = async (amount: number, game: GameType, prediction: any): Promise<boolean> => {
+    if (!window.TON) {
+      toast.error("TON wallet connection not available");
+      return false;
+    }
+    
+    try {
+      toast.info("Processing transaction...");
+      
+      // Convert amount to nanoTON (1 TON = 1e9 nanoTON)
+      const amountInNano = amount * 1e9;
+      
+      // Encode game data for the smart contract
+      const encodedData = encodeGameData(game, prediction);
+      
+      // In production, use TON SDK to properly encode the transaction
+      const txResult = await window.TON.sendTransaction({
+        to: GAME_CONTRACT_ADDRESS,
+        value: amountInNano,
+        data: encodedData,
+        dataType: 'text', // or 'hex' depending on your contract
+      });
+      
+      console.log("Transaction result:", txResult);
+      
+      if (txResult && txResult.status === 'ok') {
+        toast.success("Transaction confirmed!");
+        return true;
+      } else {
+        toast.error("Transaction failed");
+        return false;
+      }
+    } catch (error) {
+      console.error("Transaction error:", error);
+      toast.error("Transaction failed. Please try again.");
+      return false;
+    }
+  };
+
   const placeBet = async (game: GameType, prediction: any, isTrial: boolean = false): Promise<boolean> => {
     if (!user) {
       toast.error("Please connect to Telegram first");
@@ -172,23 +242,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // If wallet is connected and not a trial, try to send a real transaction
     if (wallet.connected && window.TON && !isTrial) {
-      try {
-        // TODO: Replace with actual contract interaction logic
-        // This is a placeholder for real blockchain transactions
-        toast.info("Processing transaction...");
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // In a real implementation, this would be a call to a smart contract
-        // const txResult = await window.TON.sendTransaction({
-        //   to: 'CONTRACT_ADDRESS',
-        //   value: betAmount * 1e9, // Convert to nanoTON
-        //   data: 'encoded_bet_data'
-        // });
-        
-        // For demo purposes, we're simulating the transaction result
-      } catch (error) {
-        console.error("Transaction error:", error);
-        toast.error("Transaction failed. Please try again.");
+      const txSuccess = await processRealTransaction(betAmount, game, prediction);
+      if (!txSuccess) {
         setIsLoading(false);
         return false;
       }
@@ -284,6 +339,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.success(isTrial 
         ? `You would have won ${(betAmount * 1.8).toFixed(2)} TON! (Trial Play)` 
         : `You won ${winAmount.toFixed(2)} TON!`);
+        
+      // In a real implementation, the smart contract would handle payouts automatically
+      // based on the game results and odds
     } else {
       toast.error(isTrial 
         ? "Better luck next time! (Trial Play)" 
