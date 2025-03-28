@@ -3,7 +3,7 @@ import { run as deployRandomness } from "../src/contracts/deployRandomness";
 import { run as deployCasino } from "../src/contracts/deploy";
 
 export async function run() {
-  console.log("📁 Running deployment from src/contracts directory");
+  console.log("📁 Running deployment from root directory");
   
   // Command line args can determine which contract to deploy
   const args = process.argv.slice(2);
