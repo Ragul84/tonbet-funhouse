@@ -19,8 +19,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
-      <GameProvider>
-        <TelegramProvider>
+      <TelegramProvider>
+        <GameProvider>
           <Toaster />
           <Sonner />
           <Routes>
@@ -32,8 +32,8 @@ const App = () => (
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </TelegramProvider>
-      </GameProvider>
+        </GameProvider>
+      </TelegramProvider>
     </BrowserRouter>
   </QueryClientProvider>
 );
