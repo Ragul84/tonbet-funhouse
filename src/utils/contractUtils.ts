@@ -1,9 +1,11 @@
-
 import { Address } from '@ton/core';
 
+// Import contract addresses (these will be populated after deployment)
+import contractAddresses from '../contracts/addresses.json';
+
 // Contract address constants
-export const MAINNET_CONTRACT_ADDRESS = "EQD__MAINNET_CONTRACT_ADDRESS__";
-export const TESTNET_CONTRACT_ADDRESS = "EQD__TESTNET_CONTRACT_ADDRESS__";
+export const MAINNET_CONTRACT_ADDRESS = contractAddresses.mainnet;
+export const TESTNET_CONTRACT_ADDRESS = contractAddresses.testnet;
 
 // Use testnet by default for development
 export const USE_TESTNET = true;
@@ -208,22 +210,99 @@ export const createBetData = (
 };
 
 /**
- * Creates payload for a TON transaction to the gaming contract
+ * Creates message body payload for a TON transaction to the gaming contract
  */
-export const createTonTransactionPayload = (betData: BetData): {
-  to: string;
-  value: bigint;
-  payload: string;
-} => {
+export const createTonTransactionPayload = (betData: BetData): string => {
+  // In a real implementation, you would use TonClient to encode this properly
+  // This is a simplified version that matches our contract's expected format
+  const payload = {
+    "op": 1, // op::place_bet
+    "game_type": betData.gameType,
+    "prediction": betData.prediction,
+    "timestamp": betData.timestamp
+  };
+  
+  // Convert to base64 for contract
+  return Buffer.from(JSON.stringify(payload)).toString('base64');
+};
+
+/**
+ * Initializes a listener for bet results from the contract
+ */
+export const initContractEventListener = (callback: (event: any) => void) => {
+  // In a real implementation, you would:
+  // 1. Subscribe to events from your TON contract
+  // 2. Process incoming events and pass them to the callback
+  // 3. Handle reconnection logic, etc.
+  
+  console.log("Contract event listener initialized for address:", getContractAddress());
+  
+  // Return an unsubscribe function
+  return () => {
+    console.log("Contract event listener unsubscribed");
+  };
+};
+
+/**
+ * Creates a transaction to place a bet
+ */
+export const createBetTransaction = (betData: BetData) => {
   return {
     to: getContractAddress(),
     value: betData.amount,
-    payload: JSON.stringify({
-      op: 'place_bet',
-      bet_id: betData.betId,
-      game_type: betData.gameType,
-      prediction: betData.prediction,
-      timestamp: betData.timestamp
-    })
+    payload: createTonTransactionPayload(betData),
+    // Other transaction parameters would be set here
   };
+};
+
+/**
+ * Utility for verifying bet outcomes (for provably fair verification)
+ */
+export const verifyBetOutcome = (
+  betId: string, 
+  gameType: number, 
+  prediction: number, 
+  randomValue: bigint
+): {outcome: number, won: boolean, payout: number} => {
+  // This is a client-side implementation of the same logic in the contract
+  // Used for verifying that the contract is behaving fairly
+  
+  let outcome = 0;
+  let won = false;
+  
+  if (gameType === GameType.COINFLIP) {
+    outcome = 1 + (Number(randomValue) % 2);
+    won = (outcome === prediction);
+  } else if (gameType === GameType.DICE) {
+    outcome = 1 + (Number(randomValue) % 6);
+    if (prediction === 1) {
+      won = (outcome > 3);
+    } else {
+      won = (outcome <= 3);
+    }
+  } else if (gameType === GameType.CRASH) {
+    // Simplified crash implementation for verification
+    const rnd = Number(randomValue) % 100;
+    let crashPoint;
+    
+    if (rnd < 15) {
+      crashPoint = 100 + (Number(randomValue) % 20);
+    } else if (rnd < 65) {
+      crashPoint = 120 + (Number(randomValue) % 180);
+    } else if (rnd < 90) {
+      crashPoint = 300 + (Number(randomValue) % 500);
+    } else if (rnd < 98) {
+      crashPoint = 800 + (Number(randomValue) % 1200);
+    } else {
+      crashPoint = 2000 + (Number(randomValue) % 3000);
+    }
+    
+    outcome = crashPoint;
+    won = (crashPoint >= prediction);
+  }
+  
+  // Calculate payout (simplified from contract calculation)
+  const payout = won ? Number(prediction) * (1 - HOUSE_EDGE_PERCENT / 100) : 0;
+  
+  return { outcome, won, payout };
 };
