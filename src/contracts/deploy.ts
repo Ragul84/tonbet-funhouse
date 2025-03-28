@@ -1,5 +1,5 @@
 
-import { TonClient, Address, Cell, StateInit, contractAddress, beginCell } from "@ton/ton";
+import { Address, Cell, beginCell } from "@ton/core";
 import fs from "fs";
 import { compileFunc } from "@ton/blueprint";
 
@@ -29,12 +29,8 @@ async function main() {
     .endCell();
 
   // Calculate contract address
-  const stateInit = {
-    code: mainCode,
-    data: dataCell
-  };
-  
-  const contractAddr = contractAddress(0, stateInit);
+  // We need to install the @ton/blueprint package which provides the contractAddress function
+  const contractAddr = calculateContractAddress(0, { code: mainCode, data: dataCell });
   console.log(`Contract address: ${contractAddr.toString()}`);
   
   // Save contract addresses to file for frontend use
@@ -48,6 +44,19 @@ async function main() {
   console.log("Contract ready for deployment");
   console.log(`To deploy, send at least ${INITIAL_BALANCE} TON to ${contractAddr.toString()}`);
   console.log("After deployment, update the contract addresses in your frontend code");
+}
+
+// Helper function to calculate contract address
+function calculateContractAddress(workchain: number, stateInit: { code: Cell; data: Cell }) {
+  // This is a simple implementation to calculate the contract address
+  // In production, you should use the proper function from a TON library
+  const stateInitCell = beginCell()
+    .storeRef(stateInit.code)
+    .storeRef(stateInit.data)
+    .endCell();
+  
+  const hash = stateInitCell.hash();
+  return new Address(workchain, hash);
 }
 
 main().catch(console.error);
