@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useTonConnectUI, THEME } from "@tonconnect/ui-react";
+import { useTonConnectUI } from "@tonconnect/ui-react";
 
 declare global {
   interface Window {
@@ -86,10 +86,10 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Configure TON Connect UI
   useEffect(() => {
-    // Set the theme to match Telegram's color scheme
+    // Setting UI preferences without using theme directly
     setOptions({
-      theme: THEME.DARK,
       uiPreferences: {
+        // Using the options that are actually available
       },
     });
   }, [setOptions]);
