@@ -15,8 +15,15 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
   const { betAmount, setBetAmount, balance, isLoading } = useGameContext();
   const { wallet, connectWallet, disconnectWallet } = useTelegramContext();
 
-  // Use wallet balance if connected, otherwise use game context balance
-  const availableBalance = wallet.connected ? Number(wallet.balance)/1e9 : balance;
+  // Format balance for display and calculations
+  const getAvailableBalance = () => {
+    if (wallet.connected && wallet.balance) {
+      return Number(wallet.balance) / 1e9;
+    }
+    return balance;
+  };
+  
+  const availableBalance = getAvailableBalance();
 
   const increaseBet = (amount: number) => {
     setBetAmount((prev) => Math.min(prev + amount, availableBalance));
@@ -67,6 +74,11 @@ const BetControls: React.FC<BetControlsProps> = ({ onBet, disabled = false }) =>
           <LogOut className="h-4 w-4 mr-2" />
           Disconnect
         </Button>
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-gray-400">Balance:</span>
+        <span className="font-medium">{availableBalance.toFixed(2)} TON</span>
       </div>
       
       <div className="flex items-center space-x-4">

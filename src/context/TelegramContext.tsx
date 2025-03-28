@@ -71,6 +71,7 @@ export const TelegramProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Connect to TON wallet
   const connectWallet = async () => {
     try {
+      console.info("Attempting to connect wallet...");
       if (wallet.connected) {
         toast.info("Already connected to wallet");
         return;

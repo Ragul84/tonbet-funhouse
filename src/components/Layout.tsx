@@ -35,6 +35,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
+  // Format balance for display
+  const displayBalance = () => {
+    if (wallet.connected && wallet.balance) {
+      const balanceNum = Number(wallet.balance) / 1e9;
+      return balanceNum.toFixed(2);
+    }
+    return balance.toFixed(2);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-800 m-4 py-3 px-4 md:px-6 flex flex-wrap justify-between items-center gap-3 rounded-xl shadow-lg border border-white/10">
@@ -97,7 +106,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           
           <div className="flex items-center space-x-2 neomorphic-balance px-3 py-2 rounded-full">
             <CircleDollarSign className="h-5 w-5 text-ton" />
-            <span className="font-medium text-white">{wallet.connected ? (Number(wallet.balance)/1e9).toFixed(2) : balance.toFixed(2)} TON</span>
+            <span className="font-medium text-white">{displayBalance()} TON</span>
           </div>
         </div>
       </header>
