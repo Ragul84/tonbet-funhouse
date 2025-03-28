@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useTelegramContext } from "./TelegramContext";
@@ -14,6 +13,7 @@ interface Bet {
   payout: number;
   userId: number;
   username: string;
+  isTrial?: boolean;
 }
 
 interface UserStats {
@@ -30,11 +30,13 @@ interface GameContextType {
   setBalance: React.Dispatch<React.SetStateAction<number>>;
   betAmount: number;
   setBetAmount: React.Dispatch<React.SetStateAction<number>>;
-  placeBet: (game: GameType, prediction: any) => Promise<boolean>;
+  placeBet: (game: GameType, prediction: any, isTrial?: boolean) => Promise<boolean>;
   bets: Bet[];
   isLoading: boolean;
   userStats: UserStats[];
   currentUserStats: UserStats | null;
+  trialPlaysLeft: number;
+  setTrialPlaysLeft: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -53,6 +55,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [bets, setBets] = useState<Bet[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [userStats, setUserStats] = useState<UserStats[]>([]);
+  const [trialPlaysLeft, setTrialPlaysLeft] = useState(2); // Each user gets 2 free trial plays
   const { user, wallet } = useTelegramContext();
 
   // Current user stats
@@ -64,7 +67,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Update user stats based on bet outcome
-  const updateUserStats = (userId: number, username: string, amount: number, isWin: boolean, payout: number) => {
+  const updateUserStats = (userId: number, username: string, amount: number, isWin: boolean, payout: number, isTrial?: boolean) => {
+    // Don't update stats for trial plays
+    if (isTrial) return;
+    
     setUserStats(prevStats => {
       // Find existing user stats
       const existingUserIndex = prevStats.findIndex(stats => stats.userId === userId);
@@ -100,42 +106,58 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const placeBet = async (game: GameType, prediction: any): Promise<boolean> => {
+  const placeBet = async (game: GameType, prediction: any, isTrial: boolean = false): Promise<boolean> => {
     if (!user) {
       toast.error("Please connect to Telegram first");
       return false;
     }
 
-    if (betAmount <= 0) {
-      toast.error("Bet amount must be greater than 0");
-      return false;
-    }
-
-    // Check if wallet is connected
-    if (wallet.connected) {
-      if (!wallet.address || !wallet.balance) {
-        toast.error("Wallet not properly connected");
+    // Handle trial mode
+    if (isTrial) {
+      if (trialPlaysLeft <= 0) {
+        toast.error("No trial plays left. Place a real bet!");
         return false;
       }
-
-      const availableBalance = Number(wallet.balance)/1e9;
       
-      if (betAmount > availableBalance) {
-        toast.error("Insufficient wallet balance");
+      setTrialPlaysLeft(prev => prev - 1);
+    } else {
+      // Real bet checks
+      if (betAmount <= 0) {
+        toast.error("Bet amount must be greater than 0");
         return false;
       }
-    } else {
-      // Using simulated balance for demo
-      if (betAmount > balance) {
-        toast.error("Insufficient balance");
-        return false;
+
+      // Check if wallet is connected
+      if (wallet.connected) {
+        if (!wallet.address || !wallet.balance) {
+          toast.error("Wallet not properly connected");
+          return false;
+        }
+
+        const availableBalance = Number(wallet.balance)/1e9;
+        
+        if (betAmount > availableBalance) {
+          toast.error("Insufficient wallet balance");
+          return false;
+        }
+      } else {
+        // Using simulated balance for demo
+        if (betAmount > balance) {
+          toast.error("Insufficient balance");
+          return false;
+        }
+      }
+
+      // Deduct balance for real bets
+      if (!wallet.connected) {
+        setBalance((prev) => prev - betAmount);
       }
     }
 
     setIsLoading(true);
 
-    // If wallet is connected, try to send a real transaction
-    if (wallet.connected && window.TON) {
+    // If wallet is connected and not a trial, try to send a real transaction
+    if (wallet.connected && window.TON && !isTrial) {
       try {
         // TODO: Replace with actual contract interaction logic
         // This is a placeholder for real blockchain transactions
@@ -156,9 +178,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
         return false;
       }
-    } else {
-      // Using simulated balance for demo
-      setBalance((prev) => prev - betAmount);
     }
 
     // Simulate network delay
@@ -166,7 +185,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     let isWin = false;
     let winAmount = 0;
-    const platformFee = betAmount * 0.002; // 0.2% platform fee
+    const platformFee = isTrial ? 0 : betAmount * 0.002; // No fee for trial plays
 
     // Different game logic
     switch (game) {
@@ -190,37 +209,44 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Calculate winnings with 1.8x multiplier if win
-    winAmount = isWin ? betAmount * 1.8 - platformFee : 0;
+    winAmount = isWin ? (isTrial ? 0 : betAmount * 1.8 - platformFee) : 0;
 
     // Add bet to history
     const newBet: Bet = {
       id: Math.random().toString(36).substring(2, 9),
       game,
-      amount: betAmount,
+      amount: isTrial ? 0 : betAmount,
       timestamp: new Date(),
       outcome: isWin ? "win" : "lose",
       payout: winAmount,
       userId: user.id,
-      username: user.username
+      username: user.username,
+      isTrial
     };
 
     setBets((prev) => [newBet, ...prev]);
 
-    // Update user stats
-    updateUserStats(user.id, user.username, betAmount, isWin, winAmount);
+    // Update user stats for real bets
+    if (!isTrial) {
+      updateUserStats(user.id, user.username, betAmount, isWin, winAmount);
 
-    // If using simulated balance, update it
-    if (!wallet.connected) {
-      // Update balance if won
-      if (isWin) {
-        setBalance((prev) => prev + winAmount);
+      // If using simulated balance, update it for real wins
+      if (!wallet.connected) {
+        // Update balance if won
+        if (isWin) {
+          setBalance((prev) => prev + winAmount);
+        }
       }
     }
 
     if (isWin) {
-      toast.success(`You won ${winAmount.toFixed(2)} TON!`);
+      toast.success(isTrial 
+        ? `You would have won ${(betAmount * 1.8).toFixed(2)} TON! (Trial Play)` 
+        : `You won ${winAmount.toFixed(2)} TON!`);
     } else {
-      toast.error("Better luck next time!");
+      toast.error(isTrial 
+        ? "Better luck next time! (Trial Play)" 
+        : "Better luck next time!");
     }
 
     setIsLoading(false);
@@ -238,7 +264,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         bets,
         isLoading,
         userStats,
-        currentUserStats
+        currentUserStats,
+        trialPlaysLeft,
+        setTrialPlaysLeft
       }}
     >
       {children}

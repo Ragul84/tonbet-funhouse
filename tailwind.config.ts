@@ -122,6 +122,13 @@ export default {
 					'50%': { transform: 'rotateX(180deg) rotateY(90deg) rotateZ(90deg)' },
 					'75%': { transform: 'rotateX(270deg) rotateY(270deg) rotateZ(135deg)' },
 					'100%': { transform: 'rotateX(360deg) rotateY(360deg) rotateZ(180deg)' }
+				},
+				'coin-flip': {
+					'0%': { transform: 'rotateY(0) rotateZ(0)' },
+					'25%': { transform: 'rotateY(900deg) rotateZ(45deg)' },
+					'50%': { transform: 'rotateY(1800deg) rotateZ(90deg)' },
+					'75%': { transform: 'rotateY(2700deg) rotateZ(135deg)' },
+					'100%': { transform: 'rotateY(3600deg) rotateZ(180deg)' }
 				}
 			},
 			animation: {
@@ -131,18 +138,21 @@ export default {
 				'roll': 'roll 1s cubic-bezier(0.455, 0.030, 0.515, 0.955) both',
 				'float': 'float 3s ease-in-out infinite',
 				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
-				'dice-roll': 'dice-roll 2s cubic-bezier(0.3, 1, 0.4, 1) forwards'
+				'dice-roll': 'dice-roll 2s cubic-bezier(0.3, 1, 0.4, 1) forwards',
+				'coin-flip': 'coin-flip 1.5s cubic-bezier(0.4, 0, 0.2, 1)'
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
 				'glass-background': 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0))',
 				'purple-pink-gradient': 'linear-gradient(90deg, #8B5CF6, #D946EF)',
+				'gold-gradient': 'radial-gradient(circle at 30% 30%, #FFD700, #FFC107, #FF8F00)'
 			},
 			boxShadow: {
 				'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
 				'neon': '0 0 5px theme("colors.app.purple"), 0 0 20px theme("colors.app.purple")',
 				'neon-pink': '0 0 5px theme("colors.app.pink"), 0 0 20px theme("colors.app.pink")',
 				'dice': '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.2), inset 0 0 10px rgba(255, 255, 255, 0.8)',
+				'coin': 'inset 0 0 10px rgba(255, 255, 255, 0.5), inset 0 -5px 15px rgba(0,0,0,0.3), 0 0 10px rgba(0,0,0,0.3)'
 			},
 			backdropFilter: {
 				'glass': 'blur(4px)',
