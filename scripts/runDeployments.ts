@@ -1,7 +1,7 @@
 
+import { NetworkProvider } from "@ton/blueprint";
 import { run as deployRandomness } from "./deployRandomness";
 import { run as deployCasino } from "./deployCasino";
-import { NetworkProvider } from "@ton/blueprint";
 
 export async function run(provider: NetworkProvider) {
   console.log("📁 Running deployment from project root");
@@ -15,7 +15,7 @@ export async function run(provider: NetworkProvider) {
     await deployCasino(provider);
   } else {
     console.log("⚠️ Please specify which contract to deploy:");
-    console.log("npx blueprint run scripts/runDeployments.ts randomness");
-    console.log("npx blueprint run scripts/runDeployments.ts casino");
+    console.log("npx blueprint run runDeployments randomness");
+    console.log("npx blueprint run runDeployments casino");
   }
 }
