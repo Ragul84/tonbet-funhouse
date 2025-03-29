@@ -69,7 +69,6 @@ export async function run() {
   
   // Save contract addresses to file for frontend use
   try {
-    // Make sure directory exists
     const contractDir = "contracts";
     if (!fs.existsSync(contractDir)) {
       fs.mkdirSync(contractDir, { recursive: true });
