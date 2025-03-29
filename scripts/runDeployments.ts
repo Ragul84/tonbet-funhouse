@@ -1,6 +1,5 @@
-
-import { run as deployRandomness } from "../src/contracts/deployRandomness";
-import { run as deployCasino } from "../src/contracts/deploy";
+import { run as deployRandomness } from "./deployRandomness";
+import { run as deployCasino } from "./deployCasino";
 
 export async function run() {
   console.log("📁 Running deployment from project root");
