@@ -1,7 +1,7 @@
 
 import { Address, Cell, beginCell } from "@ton/core";
 import fs from "fs";
-import { compile, NetworkProvider } from "@ton/blueprint";
+import { NetworkProvider, compile } from "@ton/blueprint";
 
 // Configure these parameters for deployment
 const INITIAL_BALANCE = "1"; // TON to be sent to the contract
