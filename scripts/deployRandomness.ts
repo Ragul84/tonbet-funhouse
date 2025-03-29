@@ -33,8 +33,25 @@ export async function run() {
   // Read existing contract addresses
   let contractAddresses;
   try {
-    // Use path relative to project root since Blueprint runs from there
-    contractAddresses = JSON.parse(fs.readFileSync("src/contracts/addresses.json", "utf8"));
+    // Make sure directory exists
+    const contractDir = "src/contracts";
+    if (!fs.existsSync(contractDir)) {
+      fs.mkdirSync(contractDir, { recursive: true });
+    }
+    
+    const addressesFile = "src/contracts/addresses.json";
+    if (!fs.existsSync(addressesFile)) {
+      // Create the file if it doesn't exist
+      fs.writeFileSync(
+        addressesFile,
+        JSON.stringify({
+          mainnet: "EQD__MAINNET_CASINO_PLACEHOLDER__",
+          testnet: "EQD__TESTNET_CASINO_PLACEHOLDER__"
+        }, null, 2)
+      );
+    }
+    
+    contractAddresses = JSON.parse(fs.readFileSync(addressesFile, "utf8"));
   } catch (error) {
     contractAddresses = {
       mainnet: "EQD__MAINNET_CASINO_PLACEHOLDER__",
@@ -65,8 +82,22 @@ export async function run() {
   
   // Save the address to a file for easy access
   try {
-    // Try to read the existing file
-    const randomnessAddresses = JSON.parse(fs.readFileSync("src/contracts/randomnessAddress.json", "utf8"));
+    // Make sure directory exists
+    const contractDir = "src/contracts";
+    if (!fs.existsSync(contractDir)) {
+      fs.mkdirSync(contractDir, { recursive: true });
+    }
+    
+    const randomnessAddressFile = "src/contracts/randomnessAddress.json";
+    
+    let randomnessAddresses = {
+      mainnet: "EQD__MAINNET_RANDOMNESS_PLACEHOLDER__",
+      testnet: "EQD__TESTNET_RANDOMNESS_PLACEHOLDER__"
+    };
+    
+    if (fs.existsSync(randomnessAddressFile)) {
+      randomnessAddresses = JSON.parse(fs.readFileSync(randomnessAddressFile, "utf8"));
+    }
     
     if (isTestnet) {
       randomnessAddresses.testnet = contractAddr.toString();
@@ -74,7 +105,7 @@ export async function run() {
       randomnessAddresses.mainnet = contractAddr.toString();
     }
     
-    fs.writeFileSync("src/contracts/randomnessAddress.json", JSON.stringify(randomnessAddresses, null, 2));
+    fs.writeFileSync(randomnessAddressFile, JSON.stringify(randomnessAddresses, null, 2));
     console.log(`💾 Saved address to randomnessAddress.json`);
   } catch (error) {
     console.error("Error updating randomnessAddress.json file:", error);

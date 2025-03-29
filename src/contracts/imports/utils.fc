@@ -1,48 +1,14 @@
 
-;; Utility functions for TON Casino contract
+;; Utils library for TON Casino
+;; SPDX-License-Identifier: MIT
 
-;; Helper function to parse sender address
-slice sender_address() {
-    return my_address();
+() emit_log(cell log_message) impure {
+  emit_log_cell(log_message);
 }
 
-;; Get my contract address
-slice my_address() {
-    return begin_parse(get_c5()).skip_bits(28 + 32).preload_msg_addr();
-}
-
-;; Skip bits in a slice
-slice skip_bits(slice s, int len) {
-    return s.slice_last(slice_bits(s) - len);
-}
-
-;; Slice last n bits
-slice slice_last(slice s, int n) {
-    return begin_parse(begin_cell().store_slice(s).end_cell()).skip_bits(slice_bits(s) - n);
-}
-
-;; Preload message address
-slice preload_msg_addr(slice s) {
-    return begin_parse(begin_cell().store_slice(s.skip_bits(3)).end_cell());
-}
-
-;; Convert TON to nanoTON
-int to_nano(int tons) {
-    return tons * 1000000000;
-}
-
-;; Convert nanoTON to TON
-int from_nano(int nanotons) {
-    return nanotons / 1000000000;
-}
-
-;; Check if address is zero
-int is_null_addr(slice addr) {
-    return equal_slices(addr, begin_parse(begin_cell().store_uint(0, 2).end_cell()));
-}
-
-;; Generate pseudorandom number (basic implementation)
-;; Note: In production, use a more secure randomness source
-int pseudo_random(int seed) {
-    return cell_hash(begin_cell().store_uint(seed, 128).store_uint(now(), 64).end_cell());
+;; Generate pseudo-random number based on seed
+int pseudo_random(int seed) impure {
+  ;; Simple randomness function that combines multiple operations
+  randomize(seed);
+  return rand(0xFFFFFFFFFFFFFFFF);
 }
