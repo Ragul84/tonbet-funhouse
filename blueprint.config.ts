@@ -1,17 +1,16 @@
 
-import { defineConfig } from "@ton/blueprint";
+import { Config } from '@ton/blueprint';
 
-export default defineConfig({
-  contracts: {
-    // Define the contract source paths
-    TonCasino: {
-      // Using relative path from the project root
-      path: "./contracts/TonCasino.fc",
-    },
-    RandomnessProvider: {
-      path: "./contracts/RandomnessProvider.fc",
-    },
+export const config: Config = {
+  // Default network configuration
+  network: {
+    // You can override these with --custom flags
+    endpoint: 'https://toncenter.com/api/v2/jsonRPC',
+    type: 'mainnet', // Or 'testnet' based on your USE_TESTNET env var
+    version: 'v2',
+    // API key is optional, will use public endpoints if not provided
+    // key: 'YOUR_API_KEY',
   },
-  // Specify the output directory for compiled contracts
-  output: "./build",
-});
+  // Optional plugins array if you're using plugins
+  // plugins: [],
+};

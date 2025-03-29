@@ -30,6 +30,8 @@ export async function run() {
     (process.env.USE_TESTNET.toLowerCase() === "true" || 
      process.env.USE_TESTNET === "1");
   
+  console.log(`🌐 Network: ${isTestnet ? "TESTNET" : "MAINNET"}`);
+  
   // Read existing contract addresses
   let contractAddresses;
   try {
@@ -67,7 +69,6 @@ export async function run() {
     contractAddresses.mainnet;
   
   console.log(`🎰 Initial casino address: ${casinoAddress} (can be updated later)`);
-  console.log(`🌐 Network: ${isTestnet ? "TESTNET" : "MAINNET"}`);
 
   // Create initial data cell (contract state)
   const dataCell = beginCell()
@@ -82,12 +83,6 @@ export async function run() {
   
   // Save the address to a file for easy access
   try {
-    // Make sure directory exists
-    const contractDir = "contracts";
-    if (!fs.existsSync(contractDir)) {
-      fs.mkdirSync(contractDir, { recursive: true });
-    }
-    
     const randomnessAddressFile = "contracts/randomnessAddress.json";
     
     let randomnessAddresses = {
@@ -107,6 +102,17 @@ export async function run() {
     
     fs.writeFileSync(randomnessAddressFile, JSON.stringify(randomnessAddresses, null, 2));
     console.log(`💾 Saved address to randomnessAddress.json`);
+    
+    // Also create a copy in the src/contracts directory for frontend use
+    const srcContractsDir = "src/contracts";
+    if (!fs.existsSync(srcContractsDir)) {
+      fs.mkdirSync(srcContractsDir, { recursive: true });
+    }
+    
+    fs.writeFileSync(`${srcContractsDir}/randomnessAddress.json`, 
+                     JSON.stringify(randomnessAddresses, null, 2));
+    console.log(`💾 Saved address to src/contracts/randomnessAddress.json for frontend use`);
+    
   } catch (error) {
     console.error("Error updating randomnessAddress.json file:", error);
     console.log("Please make sure the file exists and is writeable");
