@@ -1,7 +1,7 @@
 
 import { Address, Cell, beginCell } from "@ton/core";
 import fs from "fs";
-import { compile } from "@ton/blueprint";
+import { compile, NetworkProvider } from "@ton/blueprint";
 
 // Configure these parameters for deployment
 const INITIAL_BALANCE = "10"; // TON to be sent to the contract (for house funds)
@@ -9,7 +9,7 @@ const MIN_BET = "0.1"; // Minimum bet in TON
 const MAX_BET = "100"; // Maximum bet in TON
 const HOUSE_EDGE = 200; // 2% house edge in basis points
 
-export async function run() {
+export async function run(provider: NetworkProvider) {
   console.log("🚀 Starting TonCasino contract deployment...");
   
   // Read and compile contract
@@ -92,6 +92,16 @@ export async function run() {
     
     fs.writeFileSync(addressesFile, JSON.stringify(contractAddresses, null, 2));
     console.log(`💾 Saved address to addresses.json`);
+    
+    // Also create a copy in the src/contracts directory for frontend use
+    const srcContractsDir = "src/contracts";
+    if (!fs.existsSync(srcContractsDir)) {
+      fs.mkdirSync(srcContractsDir, { recursive: true });
+    }
+    
+    fs.writeFileSync(`${srcContractsDir}/addresses.json`, 
+                     JSON.stringify(contractAddresses, null, 2));
+    console.log(`💾 Saved address to src/contracts/addresses.json for frontend use`);
   } catch (error) {
     console.error("Error updating addresses.json file:", error);
     console.log("Please make sure the file exists and is writeable");

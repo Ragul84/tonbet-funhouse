@@ -1,12 +1,12 @@
 
 import { Address, Cell, beginCell } from "@ton/core";
 import fs from "fs";
-import { compile } from "@ton/blueprint";
+import { compile, NetworkProvider } from "@ton/blueprint";
 
 // Configure these parameters for deployment
 const INITIAL_BALANCE = "1"; // TON to be sent to the contract
 
-export async function run() {
+export async function run(provider: NetworkProvider) {
   console.log("🚀 Starting Randomness Provider contract deployment...");
   
   // Read and compile contract
