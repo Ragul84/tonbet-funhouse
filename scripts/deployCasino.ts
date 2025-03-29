@@ -40,7 +40,7 @@ export async function run() {
   
   if (!randomnessAddress) {
     try {
-      const randomnessAddresses = JSON.parse(fs.readFileSync("src/contracts/randomnessAddress.json", "utf8"));
+      const randomnessAddresses = JSON.parse(fs.readFileSync("contracts/randomnessAddress.json", "utf8"));
       randomnessAddress = isTestnet ? 
         randomnessAddresses.testnet : randomnessAddresses.mainnet;
     } catch (error) {
@@ -69,8 +69,7 @@ export async function run() {
   
   // Save contract addresses to file for frontend use
   try {
-    // Make sure directory exists
-    const contractDir = "src/contracts";
+    const contractDir = "contracts";
     if (!fs.existsSync(contractDir)) {
       fs.mkdirSync(contractDir, { recursive: true });
     }
@@ -80,7 +79,7 @@ export async function run() {
       testnet: "EQD__TESTNET_CASINO_PLACEHOLDER__"
     };
     
-    const addressesFile = "src/contracts/addresses.json";
+    const addressesFile = "contracts/addresses.json";
     if (fs.existsSync(addressesFile)) {
       contractAddresses = JSON.parse(fs.readFileSync(addressesFile, "utf8"));
     }

@@ -34,12 +34,12 @@ export async function run() {
   let contractAddresses;
   try {
     // Make sure directory exists
-    const contractDir = "src/contracts";
+    const contractDir = "contracts";
     if (!fs.existsSync(contractDir)) {
       fs.mkdirSync(contractDir, { recursive: true });
     }
     
-    const addressesFile = "src/contracts/addresses.json";
+    const addressesFile = "contracts/addresses.json";
     if (!fs.existsSync(addressesFile)) {
       // Create the file if it doesn't exist
       fs.writeFileSync(
@@ -83,12 +83,12 @@ export async function run() {
   // Save the address to a file for easy access
   try {
     // Make sure directory exists
-    const contractDir = "src/contracts";
+    const contractDir = "contracts";
     if (!fs.existsSync(contractDir)) {
       fs.mkdirSync(contractDir, { recursive: true });
     }
     
-    const randomnessAddressFile = "src/contracts/randomnessAddress.json";
+    const randomnessAddressFile = "contracts/randomnessAddress.json";
     
     let randomnessAddresses = {
       mainnet: "EQD__MAINNET_RANDOMNESS_PLACEHOLDER__",

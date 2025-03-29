@@ -1,9 +1,8 @@
-
 import { Address } from '@ton/core';
 
 // Import contract addresses (these will be populated after deployment)
-import contractAddresses from '../contracts/addresses.json';
-import randomnessAddresses from '../contracts/randomnessAddress.json';
+import contractAddresses from '../../contracts/addresses.json';
+import randomnessAddresses from '../../contracts/randomnessAddress.json';
 
 // Contract address constants
 export const MAINNET_CONTRACT_ADDRESS = contractAddresses.mainnet;

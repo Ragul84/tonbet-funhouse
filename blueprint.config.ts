@@ -6,10 +6,10 @@ export default defineConfig({
     // Define the contract source paths
     TonCasino: {
       // Using relative path from the project root
-      path: "./src/contracts/TonCasino.fc",
+      path: "./contracts/TonCasino.fc",
     },
     RandomnessProvider: {
-      path: "./src/contracts/RandomnessProvider.fc",
+      path: "./contracts/RandomnessProvider.fc",
     },
   },
   // Specify the output directory for compiled contracts
