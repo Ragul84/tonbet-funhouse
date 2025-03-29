@@ -1,0 +1,14 @@
+
+;; Utils library for TON Casino
+;; SPDX-License-Identifier: MIT
+
+() emit_log(cell log_message) impure {
+  emit_log_cell(log_message);
+}
+
+;; Generate pseudo-random number based on seed
+int pseudo_random(int seed) impure {
+  ;; Simple randomness function that combines multiple operations
+  randomize(seed);
+  return rand(0xFFFFFFFFFFFFFFFF);
+}

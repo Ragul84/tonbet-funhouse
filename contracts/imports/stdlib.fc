@@ -1,0 +1,5 @@
+
+;; Standard library for TON blockchain smart contracts
+;; SPDX-License-Identifier: MIT
+
+#include "stdlib.fc";

@@ -1,0 +1,484 @@
+
+;; TON Casino Contract
+;; SPDX-License-Identifier: MIT
+
+#pragma version >=0.4.0;
+
+#include "imports/stdlib.fc";
+#include "imports/utils.fc";
+
+;; Storage variables
+global slice owner_address;
+global int min_bet;
+global int max_bet;
+global int house_edge;
+global int house_balance;
+global cell bets_dict; ;; (query_id) -> bet_data
+global cell user_bets_dict; ;; (user_address) -> user_bets
+global slice randomness_provider;
+
+;; Constants
+const int op::place_bet = 1;
+const int op::provide_random = 2;
+const int op::withdraw_house = 3;
+
+;; Load contract storage
+() load_data() impure {
+  var ds = get_data().begin_parse();
+  owner_address = ds~load_msg_addr();
+  min_bet = ds~load_coins();
+  max_bet = ds~load_coins();
+  house_edge = ds~load_uint(16);
+  house_balance = ds~load_coins();
+  bets_dict = ds~load_dict();
+  user_bets_dict = ds~load_dict();
+  randomness_provider = ds~load_msg_addr();
+  ds.end_parse();
+}
+
+;; Save contract storage
+() save_data() impure {
+  set_data(begin_cell()
+    .store_slice(owner_address)
+    .store_coins(min_bet)
+    .store_coins(max_bet)
+    .store_uint(house_edge, 16)
+    .store_coins(house_balance)
+    .store_dict(bets_dict)
+    .store_dict(user_bets_dict)
+    .store_slice(randomness_provider)
+    .end_cell());
+}
+
+;; Only owner modifier check
+() only_owner() impure {
+  throw_unless(401, equal_slices(sender_address(), owner_address));
+}
+
+;; Only randomness provider modifier check
+() only_randomness_provider() impure {
+  throw_unless(402, equal_slices(sender_address(), randomness_provider));
+}
+
+;; Generate a unique bet ID for tracking
+slice generate_bet_id(slice player, int timestamp) {
+  return begin_cell()
+    .store_slice(player)
+    .store_uint(timestamp, 64)
+    .end_cell()
+    .begin_parse();
+}
+
+;; Represent cell structure to store a bet
+;; bet_data:
+;;   player_address:MsgAddressInt
+;;   bet_amount:Coins
+;;   game_type:uint32
+;;   prediction:uint32
+;;   timestamp:uint64
+;;   status:uint8 (0 = pending, 1 = won, 2 = lost, 3 = refunded)
+()
+store_bet(slice bet_id, slice player, int amount, int game_type, int prediction, int timestamp) impure {
+  cell bet_data = begin_cell()
+    .store_slice(player)
+    .store_coins(amount)
+    .store_uint(game_type, 32)
+    .store_uint(prediction, 32)
+    .store_uint(timestamp, 64)
+    .store_uint(0, 8) ;; status: pending
+    .end_cell();
+  
+  bets_dict = dict_set(bets_dict, 256, bet_id, bet_data);
+  
+  ;; Also update user's personal bet history
+  (cell user_bets, int found) = dict_get?(user_bets_dict, 256, player);
+  cell new_user_bets = begin_cell().store_dict(user_bets).store_slice(bet_id).end_cell();
+  user_bets_dict = dict_set(user_bets_dict, 256, player, new_user_bets);
+}
+
+;; Store a bet's outcome
+()
+store_bet_outcome(slice bet_id, int outcome, int won, int payout) impure {
+  (cell bet_data, int found) = dict_get?(bets_dict, 256, bet_id);
+  
+  if (~ found) {
+    return (); ;; Bet not found, ignore
+  }
+  
+  slice bet_data_slice = bet_data.begin_parse();
+  
+  ;; Read existing bet data
+  slice player = bet_data_slice~load_msg_addr();
+  int amount = bet_data_slice~load_coins();
+  int game_type = bet_data_slice~load_uint(32);
+  int prediction = bet_data_slice~load_uint(32);
+  int timestamp = bet_data_slice~load_uint(64);
+  
+  ;; Create updated bet data with outcome
+  cell updated_bet_data = begin_cell()
+    .store_slice(player)
+    .store_coins(amount)
+    .store_uint(game_type, 32)
+    .store_uint(prediction, 32)
+    .store_uint(timestamp, 64)
+    .store_uint(won ? 1 : 2, 8) ;; status: 1 = won, 2 = lost
+    .store_uint(outcome, 32) ;; actual outcome
+    .store_coins(payout) ;; payout amount (0 if lost)
+    .end_cell();
+  
+  ;; Update bet in dictionary
+  bets_dict = dict_set(bets_dict, 256, bet_id, updated_bet_data);
+  
+  ;; Update house balance
+  if (won) {
+    house_balance -= payout;
+  } else {
+    house_balance += amount;
+  }
+}
+
+;; Process coinflip game
+;; Heads = 1, Tails = 2
+(int, int, int)
+process_coinflip(int prediction, int random_value, int bet_amount) {
+  int outcome = 1 + (random_value % 2); ;; 1 = heads, 2 = tails
+  int won = (outcome == prediction);
+  
+  ;; Calculate payout with house edge
+  int payout = 0;
+  if (won) {
+    ;; 2x payout minus house edge
+    int multiplier = 2000 - house_edge; ;; in basis points (2000 = 2x)
+    payout = (bet_amount * multiplier) / 1000;
+  }
+  
+  return (outcome, won, payout);
+}
+
+;; Process dice game
+;; High (4-6) = 1, Low (1-3) = 2
+(int, int, int)
+process_dice(int prediction, int random_value, int bet_amount) {
+  int outcome = 1 + (random_value % 6); ;; 1-6
+  
+  ;; Check if won based on prediction
+  int won = 0;
+  if (prediction == 1) { ;; High
+    won = (outcome > 3);
+  } else { ;; Low
+    won = (outcome <= 3);
+  }
+  
+  ;; Calculate payout with house edge
+  int payout = 0;
+  if (won) {
+    ;; 2x payout minus house edge
+    int multiplier = 2000 - house_edge; ;; in basis points (2000 = 2x)
+    payout = (bet_amount * multiplier) / 1000;
+  }
+  
+  return (outcome, won, payout);
+}
+
+;; Process crash game
+;; prediction = multiplier * 100 (e.g. 150 = 1.5x)
+(int, int, int)
+process_crash(int prediction, int random_value, int bet_amount) {
+  ;; Generate crash point using random value
+  ;; This is a simplified implementation, can be made more complex
+  int r = random_value % 100;
+  int crash_point = 0;
+  
+  if (r < 15) {
+    ;; 15% chance of crashing at 1.0x-1.2x
+    crash_point = 100 + (random_value % 20);
+  } elseif (r < 65) {
+    ;; 50% chance of crashing at 1.2x-3.0x
+    crash_point = 120 + (random_value % 180);
+  } elseif (r < 90) {
+    ;; 25% chance of crashing at 3.0x-8.0x
+    crash_point = 300 + (random_value % 500);
+  } elseif (r < 98) {
+    ;; 8% chance of crashing at 8.0x-20.0x
+    crash_point = 800 + (random_value % 1200);
+  } else {
+    ;; 2% chance of crashing at 20.0x-50.0x
+    crash_point = 2000 + (random_value % 3000);
+  }
+  
+  ;; Did the player cash out in time?
+  int won = (crash_point >= prediction);
+  
+  ;; Calculate payout with house edge if won
+  int payout = 0;
+  if (won) {
+    ;; prediction is in basis points (e.g. 150 = 1.5x)
+    int multiplier = prediction - ((prediction * house_edge) / 10000);
+    payout = (bet_amount * multiplier) / 100;
+  }
+  
+  return (crash_point, won, payout);
+}
+
+;; Process bet based on random value and game type
+(int, int, int)
+process_bet_outcome(int game_type, int prediction, int random_value, int bet_amount) {
+  if (game_type == 1) {
+    ;; Coinflip game
+    return process_coinflip(prediction, random_value, bet_amount);
+  } elseif (game_type == 2) {
+    ;; Dice game
+    return process_dice(prediction, random_value, bet_amount);
+  } elseif (game_type == 3) {
+    ;; Crash game
+    return process_crash(prediction, random_value, bet_amount);
+  } else {
+    ;; Unknown game type, return loss
+    return (0, 0, 0);
+  }
+}
+
+;; Send a randomness request to the randomness provider
+()
+request_randomness(slice bet_id) impure {
+  ;; Create message to request randomness
+  cell msg = begin_cell()
+    .store_uint(0x10, 6) ;; non-bouncing message
+    .store_slice(randomness_provider)
+    .store_coins(50000000) ;; 0.05 TON for gas
+    .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1) ;; default message header
+    .store_uint(1, 32) ;; op::request_random = 1
+    .store_slice(bet_id) ;; bet ID as the request ID
+    .end_cell();
+    
+  ;; Send the message
+  send_raw_message(msg, 1); ;; pay transfer fees separately
+}
+
+;; Send payout to the player
+()
+send_payout(slice player_address, int amount) impure {
+  ;; Create message to send TON to player
+  cell msg = begin_cell()
+    .store_uint(0x10, 6) ;; non-bouncing message
+    .store_slice(player_address)
+    .store_coins(amount)
+    .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1) ;; default message header
+    .store_uint(0, 32) ;; empty body
+    .end_cell();
+    
+  ;; Send the message
+  send_raw_message(msg, 1); ;; pay transfer fees separately
+}
+
+;; Check if there are enough house funds for potential payout
+(int)
+has_enough_house_funds(int game_type, int prediction, int bet_amount) {
+  ;; Calculate maximum potential payout based on game type and prediction
+  int max_payout = 0;
+  
+  if (game_type == 1) { ;; Coinflip
+    ;; Maximum payout is 2x minus house edge
+    max_payout = (bet_amount * (2000 - house_edge)) / 1000;
+  } elseif (game_type == 2) { ;; Dice
+    ;; Maximum payout is 2x minus house edge
+    max_payout = (bet_amount * (2000 - house_edge)) / 1000;
+  } elseif (game_type == 3) { ;; Crash
+    ;; For crash, the prediction is the multiplier in basis points
+    ;; Apply house edge to the prediction
+    int adjusted_prediction = prediction - ((prediction * house_edge) / 10000);
+    max_payout = (bet_amount * adjusted_prediction) / 100;
+  }
+  
+  ;; Check if house balance can cover the maximum payout
+  return max_payout <= house_balance;
+}
+
+;; Handle bet placement
+()
+handle_place_bet(slice sender, int msg_value, int game_type, int prediction, int timestamp) impure {
+  ;; Check bet amount is within limits
+  throw_unless(403, msg_value >= min_bet);
+  throw_unless(404, msg_value <= max_bet);
+  
+  ;; Reserve some TON for gas fees (0.05 TON)
+  int bet_amount = msg_value - 50000000;
+  
+  ;; Check if bet is still above minimum after gas reservation
+  throw_unless(405, bet_amount > 0);
+  
+  ;; Check if house has enough funds for potential payout
+  throw_unless(406, has_enough_house_funds(game_type, prediction, bet_amount));
+  
+  ;; Generate a unique bet ID
+  slice bet_id = generate_bet_id(sender, timestamp);
+  
+  ;; Store the bet
+  store_bet(bet_id, sender, bet_amount, game_type, prediction, timestamp);
+  
+  ;; Request randomness to resolve the bet
+  request_randomness(bet_id);
+}
+
+;; Handle randomness provider response
+()
+handle_provide_random(slice bet_id, int random_value) impure {
+  ;; First check if bet exists
+  (cell bet_data, int found) = dict_get?(bets_dict, 256, bet_id);
+  
+  if (~ found) {
+    return (); ;; Bet not found, ignore
+  }
+  
+  slice bet_data_slice = bet_data.begin_parse();
+  
+  ;; Read bet data
+  slice player = bet_data_slice~load_msg_addr();
+  int amount = bet_data_slice~load_coins();
+  int game_type = bet_data_slice~load_uint(32);
+  int prediction = bet_data_slice~load_uint(32);
+  
+  ;; Process the bet outcome
+  (int outcome, int won, int payout) = process_bet_outcome(game_type, prediction, random_value, amount);
+  
+  ;; Store the outcome
+  store_bet_outcome(bet_id, outcome, won, payout);
+  
+  ;; Send payout if player won
+  if (won) {
+    send_payout(player, payout);
+  }
+}
+
+;; Handle house funds withdrawal (owner only)
+()
+handle_withdraw_house(int amount) impure {
+  ;; Only owner can withdraw
+  only_owner();
+  
+  ;; Check if enough balance
+  throw_unless(407, amount <= house_balance);
+  
+  ;; Update house balance
+  house_balance -= amount;
+  
+  ;; Send funds to owner
+  send_payout(owner_address, amount);
+}
+
+;; Main entry point
+() recv_internal(int msg_value, cell in_msg_full, slice in_msg_body) impure {
+  ;; Load contract data
+  load_data();
+  
+  ;; Extract sender address
+  slice cs = in_msg_full.begin_parse();
+  int flags = cs~load_uint(4);
+  slice sender_address = cs~load_msg_addr();
+  
+  ;; Handle empty message (simple TON transfer)
+  if (in_msg_body.slice_empty?()) {
+    ;; Add received TON to house balance
+    house_balance += msg_value;
+    save_data();
+    return ();
+  }
+  
+  ;; Process message by op code
+  int op = in_msg_body~load_uint(32);
+  
+  if (op == op::place_bet) {
+    ;; Place a new bet
+    int game_type = in_msg_body~load_uint(32);
+    int prediction = in_msg_body~load_uint(32);
+    int timestamp = in_msg_body~load_uint(64);
+    
+    handle_place_bet(sender_address, msg_value, game_type, prediction, timestamp);
+  }
+  
+  elseif (op == op::provide_random) {
+    ;; Receive random value from randomness provider
+    only_randomness_provider();
+    
+    slice bet_id = in_msg_body~load_msg_addr();
+    int random_value = in_msg_body~load_uint(256);
+    
+    handle_provide_random(bet_id, random_value);
+  }
+  
+  elseif (op == op::withdraw_house) {
+    ;; Withdraw house funds (owner only)
+    int amount = in_msg_body~load_coins();
+    handle_withdraw_house(amount);
+  }
+  
+  save_data();
+}
+
+;; Get methods for external queries
+
+;; Get minimum bet
+int get_min_bet() method_id {
+  load_data();
+  return min_bet;
+}
+
+;; Get maximum bet
+int get_max_bet() method_id {
+  load_data();
+  return max_bet;
+}
+
+;; Get house edge
+int get_house_edge() method_id {
+  load_data();
+  return house_edge;
+}
+
+;; Get house balance
+int get_house_balance() method_id {
+  load_data();
+  return house_balance;
+}
+
+;; Get owner address
+slice get_owner() method_id {
+  load_data();
+  return owner_address;
+}
+
+;; Get randomness provider address
+slice get_randomness_provider() method_id {
+  load_data();
+  return randomness_provider;
+}
+
+;; Get bet data by ID
+(int, slice, int, int, int, int, int, int, int) get_bet(slice bet_id) method_id {
+  load_data();
+  (cell bet_data, int found) = dict_get?(bets_dict, 256, bet_id);
+  
+  if (~ found) {
+    return (0, null(), 0, 0, 0, 0, 0, 0, 0);
+  }
+  
+  slice bet_data_slice = bet_data.begin_parse();
+  
+  slice player = bet_data_slice~load_msg_addr();
+  int amount = bet_data_slice~load_coins();
+  int game_type = bet_data_slice~load_uint(32);
+  int prediction = bet_data_slice~load_uint(32);
+  int timestamp = bet_data_slice~load_uint(64);
+  int status = bet_data_slice~load_uint(8);
+  
+  ;; If bet has been resolved, load outcome data
+  int outcome = 0;
+  int payout = 0;
+  
+  if ((status == 1) | (status == 2)) {
+    outcome = bet_data_slice~load_uint(32);
+    payout = bet_data_slice~load_coins();
+  }
+  
+  return (found, player, amount, game_type, prediction, timestamp, status, outcome, payout);
+}
