@@ -1,6 +1,5 @@
 
 import { CompilerConfig, createForSourceFile } from '@ton/blueprint';
-import * as fs from 'fs';
 import path from 'path';
 
 export function compile(config: CompilerConfig) {

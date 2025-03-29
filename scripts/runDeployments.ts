@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 
 import { NetworkProvider } from "@ton/blueprint";
->>>>>>> 608cb0704501a18bcf31b3b22e22e769c1ba89e3
 import { run as deployRandomness } from "./deployRandomness";
 import { run as deployCasino } from "./deployCasino";
 
