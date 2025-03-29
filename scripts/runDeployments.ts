@@ -1,5 +1,5 @@
 
-import { run as deployRandomness } from "./deployRandomness";
+import { run as deployRandomness } from "../src/contracts/deployRandomness";
 import { run as deployCasino } from "../src/contracts/deploy";
 
 export async function run() {
